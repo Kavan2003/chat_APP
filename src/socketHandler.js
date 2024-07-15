@@ -195,10 +195,10 @@ export const socketHandler = (io) => {
     });
 
     // Handle accepting chat requests
-    socket.on("acceptChatRequest", ({ fromUserId, toUserId }) => {
+    socket.on("acceptChatRequest", async ({ fromUserId, toUserId }) => {
       const senderSocketId = userSocketMap.get(fromUserId);
       if (senderSocketId) {
-        ChatRequests.updateOne(
+        await  ChatRequests.updateOne(
           { requester: fromUserId, recipient: toUserId },
           { status: "accepted" }
         );
@@ -206,10 +206,10 @@ export const socketHandler = (io) => {
       }
     });
 
-    socket.on("declineChatRequest", ({ fromUserId, toUserId }) => {
+    socket.on("declineChatRequest", async ({ fromUserId, toUserId }) => {
       const senderSocketId = userSocketMap.get(fromUserId);
       if (senderSocketId) {
-        ChatRequests.updateOne(
+      await  ChatRequests.updateOne(
           { requester: fromUserId, recipient: toUserId },
           { status: "declined" }
         );
