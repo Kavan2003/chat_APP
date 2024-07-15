@@ -5,6 +5,8 @@ import{registerUser,loginUser} from "../controllers/user.controller.js";
 
 const userRoute  = Router();
 
+
+
 userRoute.route("/register").post(
     upload.fields([
       { name: "avatar", maxCount: 1 },
