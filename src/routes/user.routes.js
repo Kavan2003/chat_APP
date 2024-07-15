@@ -16,4 +16,8 @@ userRoute.route("/register").post(
 
      userRoute.route("/login").post(upload.none(),loginUser);
 
+userRoute.route("/").get((req,res)=>{
+    res.send("Hello to User API");
+});
+
 export default userRoute;

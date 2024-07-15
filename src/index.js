@@ -6,7 +6,7 @@ dotenv.config();
 import app from './app.js';
 import connectDB from './db/databaseConnect.js';
 import { socketHandler } from './socketHandler.js'; // Import the socket handler
-import serverless from 'serverless-http';
+
 
 const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
@@ -15,7 +15,6 @@ const io = new Server(httpServer, {
     origin: "*", // Adjust according to your needs
   },
 });
-
 
 
 connectDB().then(() => {
@@ -27,4 +26,3 @@ socketHandler(io);
   console.error("Error in connecting to database", error);
 });
 
-module.exports.handler = serverless(app);
