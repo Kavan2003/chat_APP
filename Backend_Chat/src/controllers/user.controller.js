@@ -93,6 +93,9 @@ const registerUser = asyncHandler(async (req, res, next) => {
   } else {
     avatarlocalfile = "";
   }
+
+  const skillsArray = skills.split(",");
+
   const { error } = registerUserSchema.validate({
     username,
     email,
@@ -100,7 +103,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
     isAdmin,
     YearOFStudy,
     Branch,
-    skills,
+    skillsArray,
     description,
     resume: resumelocalfile,
   }, { abortEarly: false });
