@@ -18,7 +18,12 @@ import userRoute from '../src/routes/user.routes.js';
 
 app.use('/api/user',userRoute);
 
+//chat route
+import chatRoute from '../src/routes/chat.routes.js';
+import sellRoute from './routes/sell.routes.js';
+app.use('/api/chat',chatRoute);
 
+app.use('/api/sell',sellRoute);
 
 
 

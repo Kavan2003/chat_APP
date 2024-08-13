@@ -51,7 +51,7 @@ const userSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
-
+userSchema.index({ username: "text", skills: "text", description: "text", Branch: "text" });
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();

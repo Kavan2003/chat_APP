@@ -34,6 +34,17 @@ const generateRefreshTokenAndAccessToken = async (userid) => {
   }
 };
 
+
+const getuserdetailsfromID = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const user
+  = await User.findById(id).select("-password -refreshToken");
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  return res
+});
+
 const registerUser = asyncHandler(async (req, res, next) => {
   const registerUserSchema = Joi.object({
     username: Joi.string().required().messages({
@@ -225,4 +236,4 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 
-export { registerUser,loginUser };
+export { registerUser,loginUser,getuserdetailsfromID };

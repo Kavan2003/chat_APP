@@ -4,6 +4,8 @@ import 'package:frontend_chat/screens/login_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/screens/register_screen.dart';
 
+import 'bloc/chatbloc/chat_bloc.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -16,6 +18,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => AuthBloc()),
+        BlocProvider(create: (context) => ChatBloc()),
         // BlocProvider(
         //   create: (context) => SubjectBloc(),
         // ),
@@ -25,7 +28,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.amber,
         ),
-        home: const RegisterScreen(),
+        home: const LoginScreen(),
       ),
     );
   }
