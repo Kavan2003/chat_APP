@@ -2,3 +2,4 @@
 node_modules/
 .netlify
 .vercel
+package-lock.json
