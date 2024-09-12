@@ -151,23 +151,27 @@ export const socketHandler = (io) => {
 
     // Handle private message
     socket.on("privateMessage", async (senderId, receiverId, message) => {
+      
       console.log(`Message from ${senderId} to ${receiverId}: ${message}`);
+
       // Use the map to get the receiver's socketId
       const receiverSocketId = userSocketMap.get(receiverId);
-      if (receiverSocketId) {
+      if (1) {
         console.log(`Receiver ${receiverId} found`);
         // socket.emit('newMessage', "Working");
 
-        io.to(receiverSocketId).emit("newMessage", { senderId, message });
 
         try {
           const newMessage = new Chat({
             Owner: senderId,
             Recipient: receiverId,
             message: message,
+            
             //  this message is not part of a group chat, hence grpid is not set
           });
           await newMessage.save();
+          io.to(receiverSocketId).emit("newMessage", newMessage);//req testing
+
           console.log("Message saved to database");
         } catch (error) {
           console.error("Error saving message to database:", error);

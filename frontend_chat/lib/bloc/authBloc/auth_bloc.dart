@@ -4,8 +4,8 @@ import 'package:frontend_chat/models/user_models.dart';
 import 'package:frontend_chat/repositories/api_response.dart';
 import 'package:frontend_chat/utils/constants.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:path/path.dart';
 part 'auth_event.dart';
 part 'auth_state.dart';
 
@@ -25,6 +25,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         final userResponse = ApiResponse<UserModel>.fromJson(
             response.body, (json) => UserModel.fromJson(json));
+//store userResponse.data!.accessToken; in local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('accessToken', userResponse.data!.accessToken);
+        await prefs.setString('id', userResponse.data!.id);
+
         userResponse.status == "true"
             ? emit(AuthSuccessState(
                 userResponse.data!,
@@ -34,7 +39,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
                 userResponse.status.toString(),
               ));
       } catch (error) {
-        print('Api Fetch Error $error');
+        print('Api Fetch Error on auth $error');
         emit(AuthFailedState(
           'Api Fetch Error ${error.toString()}',
           "000",

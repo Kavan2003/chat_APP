@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../bloc/chatbloc/chat_bloc.dart';
 import '../models/chat_models.dart';
 
 class ChatScreen extends StatefulWidget {
+  final String senderId;
+  ChatScreen({required this.senderId});
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
@@ -14,7 +17,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<ChatBloc>(context).add(ChatConnect());
+    BlocProvider.of<ChatBloc>(context).add(ChatConnect(id: widget.senderId));
   }
 
   @override
@@ -65,11 +68,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.send),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_messageController.text.isNotEmpty) {
+                      final prefs = await SharedPreferences.getInstance();
+                      final id = prefs.getString('id') ?? '';
                       BlocProvider.of<ChatBloc>(context).add(ChatSendMessage(
-                        senderId: 'user1',
-                        receiverId: 'user2',
+                        senderId: id,
+                        receiverId: widget.senderId,
                         message: _messageController.text,
                       ));
                       _messageController.clear();

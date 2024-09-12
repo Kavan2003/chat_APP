@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import Fuse from "fuse.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { SearchHistory } from "../models/searchHistory.models.js";
+import { Chat } from "../models/chat.models.js";
 
 const listChat = asyncHandler(async (req, res, next) => {
   try {
@@ -31,9 +32,14 @@ const listChat = asyncHandler(async (req, res, next) => {
     const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
       "username Avatar"
     );
+    const formattedUsers = users.map(user => ({
+      id: user._id,
+      username: user.username,
+      avatar: user.Avatar,
+    }));
 
     // Send the response with the list of users
-    res.json(new ApiResponse(200, "List of available users", users));
+    res.json(new ApiResponse(200, "List of available users", formattedUsers));
   } catch (error) {
     console.error("Failed to fetch chat requests", error);
     res.status(500).json(ApiError(500, "Failed to fetch chat requests", error));
@@ -164,4 +170,33 @@ const SearchHistorys = asyncHandler(async (req, res, next) => {
 });
 
 
-export { listChat,SearchHistorys, searchQuery };
+const getMessages = asyncHandler(async (req, res, next) => {
+
+const { ownerId, SrnderId,grpId } = req.body;
+try{
+if((ownerId & SrnderId) || grpId){
+return res.status(400).json(new ApiError(400, "Send either ownerId and SrnderId or grpId"));
+}
+let messages;
+if(ownerId && SrnderId){
+messages = await Chat.find({
+$or: [
+{ sender: ownerId, recipient: SrnderId },
+{ sender: SrnderId, recipient: ownerId },
+],
+});
+
+}
+else{
+messages = await Chat.find({ groupId: grpId });
+}
+res.json(new ApiResponse(200, "Messages fetched successfully", messages));
+}
+catch(error){
+console.error("Failed to fetch messages", error);
+res.status(500).json(new ApiError(500, "Failed to fetch messages", error));
+}
+
+});
+
+export { listChat,SearchHistorys, searchQuery,getMessages };

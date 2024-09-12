@@ -15,7 +15,7 @@ const chatSchema = mongoose.Schema(
     grpid: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "GroupInfo",
-      required: [true, "Group is required"],
+      // required: [true, "Group is required"],
       default: null,
     },
     message: {

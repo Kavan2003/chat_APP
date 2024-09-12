@@ -10,7 +10,7 @@ export const varifyJWT = asyncHandler(async (req, _, next) => {
       req.headers?.authorization?.replace("Bearer ", "");
     //  console.log(token);
     if (!token) {
-      throw new ApiError(statusCodes.UNAUTHORIZED, "Token is required");
+      throw new ApiError(401, "Unauthorized Access");
     }
 
     const decodeToken = jwt.verify(token, process.env.JWT_SECRET);

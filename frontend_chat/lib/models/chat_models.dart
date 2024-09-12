@@ -1,19 +1,18 @@
 class ChatMessage {
   final String senderId;
-  final String receiverId;
+  final String? receiverId;
   final String message;
 
   ChatMessage({
     required this.senderId,
-    required this.receiverId,
+    this.receiverId,
     required this.message,
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+  factory ChatMessage.fromJson(List<dynamic> json) {
     return ChatMessage(
-      senderId: json['senderId'],
-      receiverId: json['receiverId'],
-      message: json['message'],
+      senderId: json[0].toString(),
+      message: json[1].toString(),
     );
   }
 

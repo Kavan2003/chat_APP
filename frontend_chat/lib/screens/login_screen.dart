@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/authBloc/auth_bloc.dart';
+import 'package:frontend_chat/screens/chatList_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,8 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
             if (state is AuthSuccessState) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
+                  duration: Duration(seconds: 2),
+                  dismissDirection: DismissDirection.horizontal,
                   content: Text('Welcome ${state.user.username}!'),
                   backgroundColor: Colors.green,
+                ),
+              );
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatlistScreen(),
                 ),
               );
             } else if (state is AuthFailedState) {

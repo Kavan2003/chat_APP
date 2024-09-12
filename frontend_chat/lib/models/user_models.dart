@@ -9,10 +9,12 @@ class UserModel {
   final String avatar;
   final String description;
   final String resume;
+  final String accessToken;
   final String createdAt;
   final String updatedAt;
 
   UserModel({
+    required this.accessToken,
     required this.id,
     required this.username,
     required this.email,
@@ -29,18 +31,20 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id'] ?? '',
-      username: json['username'] ?? '',
-      email: json['email'] ?? '',
-      isAdmin: json['isAdmin'] ?? false,
-      yearOfStudy: json['YearOFStudy'] ?? 0,
-      branch: json['Branch'] ?? '',
-      skills: List<String>.from(json['skills'] ?? []),
-      avatar: json['Avatar'] ?? '',
-      description: json['description'] ?? '',
-      resume: json['resume'] ?? '',
-      createdAt: json['createdAt'] ?? '',
-      updatedAt: json['updatedAt'] ?? '',
+      accessToken: json['accessToken'] ?? '',
+      id: json['loggedUser']['_id'] ?? '',
+      username: json['loggedUser']['username'] ?? '',
+      email: json['loggedUser']['email'] ?? '',
+      isAdmin: false,
+      //todo: change this to json['loggedUser']['isAdmin'] ?? false,
+      yearOfStudy: (json['loggedUser']['YearOFStudy'] ?? 0).toString(),
+      branch: json['loggedUser']['Branch'] ?? '',
+      skills: List<String>.from(json['loggedUser']['skills'] ?? []),
+      avatar: json['loggedUser']['Avatar'] ?? '',
+      description: json['loggedUser']['description'] ?? '',
+      resume: json['loggedUser']['resume'] ?? '',
+      createdAt: json['loggedUser']['createdAt'] ?? '',
+      updatedAt: json['loggedUser']['updatedAt'] ?? '',
     );
   }
   @override

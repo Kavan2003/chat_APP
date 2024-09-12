@@ -3,7 +3,14 @@ part of 'chat_bloc.dart';
 @immutable
 abstract class ChatEvent {}
 
-class ChatConnect extends ChatEvent {}
+class ChatConnect extends ChatEvent {
+  final String id;
+  // final String receiverId;
+
+  ChatConnect({
+    required this.id,
+  });
+}
 
 class ChatConnected extends ChatEvent {}
 
