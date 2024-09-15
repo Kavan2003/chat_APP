@@ -9,6 +9,15 @@ class ApiResponse<T> {
       {required this.status, required this.message, required this.data});
 
   factory ApiResponse.fromJson(String str, T Function(dynamic) create) {
+    //check if response is in json format or XMLError
+    if (str.startsWith("<")) {
+      return ApiResponse(
+        status: "fail",
+        message: "XML Error",
+        data: null,
+      );
+    }
+
     final jsonData = json.decode(str);
     return ApiResponse(
       status: jsonData['status'].toString(),

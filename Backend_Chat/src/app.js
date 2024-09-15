@@ -21,9 +21,10 @@ app.use('/api/user',userRoute);
 //chat route
 import chatRoute from '../src/routes/chat.routes.js';
 import sellRoute from './routes/sell.routes.js';
+import jobRoute from './routes/job.routes.js';
 app.use('/api/chat',chatRoute);
-
 app.use('/api/sell',sellRoute);
+app.use('/api/job',jobRoute);
 
 
 

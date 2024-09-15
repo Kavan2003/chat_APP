@@ -156,6 +156,7 @@ export const socketHandler = (io) => {
 
       // Use the map to get the receiver's socketId
       const receiverSocketId = userSocketMap.get(receiverId);
+      const senderSocketId = userSocketMap.get(senderId);
       if (1) {
         console.log(`Receiver ${receiverId} found`);
         // socket.emit('newMessage', "Working");
@@ -171,6 +172,8 @@ export const socketHandler = (io) => {
           });
           await newMessage.save();
           io.to(receiverSocketId).emit("newMessage", newMessage);//req testing
+          io.to(senderSocketId).emit("sentMessage", newMessage);//req testing
+          
 
           console.log("Message saved to database");
         } catch (error) {

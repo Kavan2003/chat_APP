@@ -31,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                if (state is ChatInitial) {
+                if (state is ChatInitial || state is ChatLoading) {
                   return Center(child: CircularProgressIndicator());
                 } else if (state is ChatMessageReceivedState ||
                     state is ChatMessageSent) {

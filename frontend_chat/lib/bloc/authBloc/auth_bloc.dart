@@ -26,18 +26,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final userResponse = ApiResponse<UserModel>.fromJson(
             response.body, (json) => UserModel.fromJson(json));
 //store userResponse.data!.accessToken; in local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', userResponse.data!.accessToken);
-        await prefs.setString('id', userResponse.data!.id);
 
-        userResponse.status == "true"
-            ? emit(AuthSuccessState(
-                userResponse.data!,
-              ))
-            : emit(AuthFailedState(
-                userResponse.message,
-                userResponse.status.toString(),
-              ));
+        //final prefs;
+        if (userResponse.status == "true") {
+          emit(AuthSuccessState(
+            userResponse.data!,
+          ));
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('accessToken', userResponse.data!.accessToken);
+          await prefs.setString('id', userResponse.data!.id);
+        } else {
+          emit(AuthFailedState(
+            userResponse.message,
+            userResponse.status.toString(),
+          ));
+        }
       } catch (error) {
         print('Api Fetch Error on auth $error');
         emit(AuthFailedState(

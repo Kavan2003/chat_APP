@@ -32,21 +32,39 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       accessToken: json['accessToken'] ?? '',
-      id: json['loggedUser']['_id'] ?? '',
-      username: json['loggedUser']['username'] ?? '',
-      email: json['loggedUser']['email'] ?? '',
+      id: json['Owner']['_id'] ?? '',
+      username: json['Owner']['username'] ?? '',
+      email: json['Owner']['email'] ?? '',
       isAdmin: false,
       //todo: change this to json['loggedUser']['isAdmin'] ?? false,
-      yearOfStudy: (json['loggedUser']['YearOFStudy'] ?? 0).toString(),
-      branch: json['loggedUser']['Branch'] ?? '',
-      skills: List<String>.from(json['loggedUser']['skills'] ?? []),
-      avatar: json['loggedUser']['Avatar'] ?? '',
-      description: json['loggedUser']['description'] ?? '',
-      resume: json['loggedUser']['resume'] ?? '',
-      createdAt: json['loggedUser']['createdAt'] ?? '',
-      updatedAt: json['loggedUser']['updatedAt'] ?? '',
+      yearOfStudy: (json['Owner']['YearOFStudy'] ?? 0).toString(),
+      branch: json['Owner']['Branch'] ?? '',
+      skills: List<String>.from(json['Owner']['skills'] ?? []),
+      avatar: json['Owner']['Avatar'] ?? '',
+      description: json['Owner']['description'] ?? '',
+      resume: json['Owner']['resume'] ?? '',
+      createdAt: json['Owner']['createdAt'] ?? '',
+      updatedAt: json['Owner']['updatedAt'] ?? '',
     );
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'accessToken': accessToken,
+      '_id': id,
+      'username': username,
+      'email': email,
+      'isAdmin': isAdmin,
+      'YearOFStudy': yearOfStudy,
+      'Branch': branch,
+      'skills': skills,
+      'Avatar': avatar,
+      'description': description,
+      'resume': resume,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+
   @override
   String toString() {
     return 'UserModel(id: $id, username: $username, email: $email, isAdmin: $isAdmin, yearOfStudy: $yearOfStudy, branch: $branch, skills: ${skills.join(', ')}, avatar: $avatar, description: $description, resume: $resume, createdAt: $createdAt, updatedAt: $updatedAt)';

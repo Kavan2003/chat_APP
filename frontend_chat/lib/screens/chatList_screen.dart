@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/chatlistbloc/chatlist_bloc.dart';
 import 'package:frontend_chat/screens/chat_screen.dart';
 import 'package:frontend_chat/screens/search_screen.dart';
+import 'package:frontend_chat/utils/component/bottombar.dart';
 
 class ChatlistScreen extends StatefulWidget {
   const ChatlistScreen({super.key});
@@ -33,6 +34,7 @@ class _ChatlistScreenState extends State<ChatlistScreen> {
         ],
         title: const Text('Chat List'),
       ),
+      bottomSheet: BottomBar(currentIndex: 0),
       body: BlocBuilder<ChatlistBloc, ChatlistState>(
         builder: (context, state) {
           if (state is ChatlistInitial) {

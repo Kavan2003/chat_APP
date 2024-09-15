@@ -24,17 +24,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     socket.on('connect', (_) {
       add(ChatConnected());
     });
-
-    socket.on('newMessage', (data) {
+    socket.on('sentMessage', (data) {
       print(data);
       if (data is String) {
         data = json.decode(data);
       }
+      print("***************************************");
+      print(data);
+      //   print("***************************************");
+
+      messages.add(ChatMessage.fromJson(data));
+
       add(ChatMessageReceived(ChatMessage.fromJson(data)));
     });
-    // http://localhost:8000/api/chat/getmessages
-    // http req
-    // get messages
+
+    socket.on('newMessage', (data) {
+      print(data);
+      // add(ChatLoading() as ChatEvent);
+
+      if (data is String) {
+        data = json.decode(data);
+      }
+      // messages.add(ChatMessage.fromJson(data));
+
+      // print("***************************************");
+      // print(data);
+      // print("***************************************");
+
+      add(ChatMessageReceived(ChatMessage.fromJson(data)));
+    });
 
     on<ChatEvent>((event, emit) async {
       if (event is ChatConnect) {
@@ -46,31 +64,52 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           // registerUser
           socket.emit('registerUser', id);
           socket.emit('registerUserAck');
-          fetchMessage(id, event.id);
+          await fetchMessage(id, event.id).then((value) {
+            final chatListResponse = ApiResponse<ChatHistory>.fromJson(
+                value, (json) => ChatHistory.fromJson(json));
+            if (chatListResponse.data == null) {
+              emit(ChatError(chatListResponse.message));
+              return;
+            }
+            messages = chatListResponse.data!.messages;
+            emit(ChatMessageReceivedState(messages));
+          });
         } catch (e) {
           print(e);
           emit(ChatError(e.toString()));
         }
-      } else if (event is ChatSendMessage) {
+      }
+      if (event is ChatSendMessage) {
         try {
           print(
               'Sending message:${event.message} with senderId: ${event.senderId} and receiverId: ${event.receiverId}');
           socket.emit('privateMessage',
               [event.senderId, event.receiverId, event.message]);
           messages.add(ChatMessage(
-            senderId: event.senderId,
-            receiverId: event.receiverId,
-            message: event.message,
-          ));
+              senderId: event.senderId,
+              receiverId: event.receiverId,
+              message: event.message,
+              fileLink: null,
+              id: '',
+              groupId: null));
           emit(ChatMessageSent(messages));
+          // add(ChatMessageReceived(ChatMessage(
+          //     senderId: event.senderId,
+          //     receiverId: event.receiverId,
+          //     message: event.message,
+          //     fileLink: null,
+          //     id: '',
+          //     groupId: null)));
         } catch (e) {
           print(e);
           emit(ChatError(e.toString()));
         }
-      } else if (event is ChatMessageReceived) {
+      }
+      if (event is ChatMessageReceived) {
         try {
           messages.add(event.message);
-          emit(ChatMessageReceivedState(messages));
+          emit(ChatMessageReceivedState(
+              List.from(messages))); // Ensure a new list is emitted
         } catch (e) {
           print(e);
           emit(ChatError(e.toString()));
@@ -96,6 +135,5 @@ fetchMessage(senderid, reciverid) async {
     },
   );
   print(response.body);
-  // final chatListResponse = ApiResponse<List<ChatMessage>>.fromJson(
-  // response.body, (json) => ChatMessage.fromJson(json));
+  return response.body;
 }

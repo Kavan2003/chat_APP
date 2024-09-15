@@ -6,3 +6,4 @@ const String userRoute = "user/";
 const String loginRoute = "login";
 const String registerRoute = "register";
 const String chatRoute = "chat/";
+const String jobRoute = "job/";

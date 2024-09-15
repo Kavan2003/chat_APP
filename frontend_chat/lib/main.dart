@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_chat/bloc/authBloc/auth_bloc.dart';
 import 'package:frontend_chat/bloc/chatlistbloc/chatlist_bloc.dart';
+import 'package:frontend_chat/bloc/jobbloc/job_bloc.dart';
 import 'package:frontend_chat/bloc/searchbloc/search_bloc.dart';
 import 'package:frontend_chat/screens/login_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => ChatBloc()),
         BlocProvider(create: (context) => SearchBloc()),
         BlocProvider(create: (context) => ChatlistBloc()),
+        BlocProvider(create: (context) => JobBloc()),
         // BlocProvider(
         //   create: (context) => SubjectBloc(),
         // ),

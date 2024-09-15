@@ -3,20 +3,13 @@ import Joi from "joi";
 import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import {uploadFileOnCloudinary} from"../utils/cloudnary.js";
-
-
-
-
+import { uploadFileOnCloudinary } from "../utils/cloudnary.js";
 
 const generateRefreshTokenAndAccessToken = async (userid) => {
   try {
     const user = await User.findById(userid);
     if (!user) {
-      throw new ApiError(
-        404,
-        "User not found while generating tokens"
-      );
+      throw new ApiError(404, "User not found while generating tokens");
     }
     const refreshToken = user.generateRefreshToken();
     const accessToken = user.generateAccessToken();
@@ -26,23 +19,17 @@ const generateRefreshTokenAndAccessToken = async (userid) => {
     return { refreshToken, accessToken };
   } catch (error) {
     console.log("Error in generating tokens ", error);
-    throw new ApiError(
-      500,
-      "Error in generating tokens ",
-      error.message
-    );
+    throw new ApiError(500, "Error in generating tokens ", error.message);
   }
 };
 
-
 const getuserdetailsfromID = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const user
-  = await User.findById(id).select("-password -refreshToken");
+  const user = await User.findById(id).select("-password -refreshToken");
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-  return res
+  return res;
 });
 
 const registerUser = asyncHandler(async (req, res, next) => {
@@ -77,8 +64,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
     resume: Joi.string().messages({
       "string.empty": "resume is required",
-
-    }), 
+    }),
   });
 
   const {
@@ -107,21 +93,23 @@ const registerUser = asyncHandler(async (req, res, next) => {
 
   const skillsArray = skills.split(",");
 
-  const { error } = registerUserSchema.validate({
-    username,
-    email,
-    password,
-    isAdmin,
-    YearOFStudy,
-    Branch,
-    skillsArray,
-    description,
-    resume: resumelocalfile,
-  }, { abortEarly: false });
+  const { error } = registerUserSchema.validate(
+    {
+      username,
+      email,
+      password,
+      isAdmin,
+      YearOFStudy,
+      Branch,
+      skillsArray,
+      description,
+      resume: resumelocalfile,
+    },
+    { abortEarly: false }
+  );
 
   if (error) {
-    const errorMessage =
-    error.details.map((detail) => detail.message)
+    const errorMessage = error.details.map((detail) => detail.message);
     throw new ApiError(400, errorMessage);
   } else {
     console.log("hello resume", resumelocalfile);
@@ -129,7 +117,10 @@ const registerUser = asyncHandler(async (req, res, next) => {
       $or: [{ username }, { email }],
     });
     if (existingUser) {
-      throw new ApiError(400, "User already exists with this email or username");
+      throw new ApiError(
+        400,
+        "User already exists with this email or username"
+      );
     } else {
       const resumeurl = await uploadFileOnCloudinary(resumelocalfile);
       console.log("resumeurl", resumeurl);
@@ -174,6 +165,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // send response to user and cookie
 
   const { email, username, password } = req.body;
+  // console.log("email", req.body);
   // if(!email && !username){
   //   throw new ApiError(statusCodes.BAD_REQUEST, "Email or username is required");
   // }
@@ -214,9 +206,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const { refreshToken, accessToken } =
     await generateRefreshTokenAndAccessToken(user._id);
 
-  const loggedUser = await User.findById(user._id).select(
-    "-password -refreshToken"
-  );
+  const Owner = await User.findById(user._id).select("-password -refreshToken");
 
   const cookieOptions = {
     httpOnly: true,
@@ -228,12 +218,11 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("accessToken", accessToken, cookieOptions)
     .json(
       new ApiResponse(200, "Success", {
-        loggedUser,
+        Owner,
         accessToken,
         refreshToken,
       })
     );
 });
 
-
-export { registerUser,loginUser,getuserdetailsfromID };
+export { registerUser, loginUser, getuserdetailsfromID };
