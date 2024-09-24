@@ -24,6 +24,8 @@ class _JobScreenState extends State<JobScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+         bottomSheet: Container(child: BottomBar(currentIndex: 1)),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton.small(
         onPressed: () {
           // A pop up dialog to create a job asking for Job details like job description, skills, company website
@@ -109,7 +111,7 @@ class _JobScreenState extends State<JobScreen> {
           ),
         ],
       ),
-      bottomSheet: BottomBar(currentIndex: 1),
+   
       body: BlocBuilder<JobBloc, JobState>(
         builder: (context, state) {
           if (state is JobLoading) {

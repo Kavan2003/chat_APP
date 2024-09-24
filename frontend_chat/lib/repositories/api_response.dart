@@ -2,7 +2,7 @@ import 'dart:convert';
 
 class ApiResponse<T> {
   final String status;
-  final String message;
+  final dynamic message;
   final T? data;
 
   ApiResponse(
@@ -21,7 +21,9 @@ class ApiResponse<T> {
     final jsonData = json.decode(str);
     return ApiResponse(
       status: jsonData['status'].toString(),
-      message: jsonData['message'],
+      message: jsonData['message'] is List
+          ? (jsonData['message'] as List).join(", ")
+          : jsonData['message'],
       data: jsonData['status'] != "fail" && jsonData['data'] != null
           ? create(jsonData['data'])
           : null,

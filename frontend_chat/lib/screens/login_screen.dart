@@ -19,10 +19,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white10,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Login to Chat'),
         backgroundColor: Colors.deepPurple[400],
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -102,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderWidth: 2,
                     selectedBorderColor: Colors.deepPurple[400],
                     selectedColor: Colors.white,
+                    color: Colors.grey,
                     borderRadius: BorderRadius.circular(0),
                     onPressed: (int index) {
                       setState(() {

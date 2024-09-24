@@ -167,6 +167,7 @@ export const socketHandler = (io) => {
             Owner: senderId,
             Recipient: receiverId,
             message: message,
+            // filelink:
             
             //  this message is not part of a group chat, hence grpid is not set
           });

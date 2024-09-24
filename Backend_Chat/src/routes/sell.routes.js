@@ -14,15 +14,17 @@ import {
 const sellRoute = Router();
 
 sellRoute.route("/")
-  .get(varifyJWT, asyncHandler(getAllSellItems))
-  .post(varifyJWT, upload.array("images", 10), asyncHandler(createSellItem));
+  .post(varifyJWT, upload.array("images", 10), createSellItem);
 
-sellRoute.route("/:id")
-  .get(varifyJWT, asyncHandler(getSellItemById))
-  .put(varifyJWT, upload.array("images", 10), asyncHandler(updateSellItem))
+sellRoute.route("/id")
+  .get(varifyJWT, getSellItemById)
+  .put(varifyJWT, upload.array("images", 10), updateSellItem)
   .delete(varifyJWT, asyncHandler(deleteSellItem));
 
+  sellRoute.route("/search")
+  .get(varifyJWT,getAllSellItems)
+
 sellRoute.route("/upload")
-  .post(varifyJWT, upload.array("images", 10), asyncHandler(uploadImages));
+  .post(varifyJWT, upload.array("images", 10), uploadImages);
 
 export default sellRoute;

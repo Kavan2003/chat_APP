@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_chat/screens/chatList_screen.dart';
 import 'package:frontend_chat/screens/job_screen.dart';
+import 'package:frontend_chat/screens/sell_screen.dart';
 
 class BottomBar extends StatelessWidget {
   final int currentIndex;
@@ -19,7 +20,9 @@ class BottomBar extends StatelessWidget {
             MaterialPageRoute(builder: (context) => const JobScreen()));
         break;
       case 2:
-        Navigator.pushNamed(context, '/sell');
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const SellScreen()));
+
         break;
       case 3:
         Navigator.pushNamed(context, '/profile');
