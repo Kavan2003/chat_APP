@@ -14,59 +14,47 @@ export const socketHandler = (io) => {
       if (userId) {
         if (!userSocketMap.has(userId)) {
           userSocketMap.set(userId, socket.id);
-          socket.on("registerUserAck", () => {
-            socket.emit("userList", Object.fromEntries(userSocketMap));
-            console.log(userSocketMap);
-          });
+          socket.emit("userList", Object.fromEntries(userSocketMap));
+          console.log(userSocketMap);
         } else {
           console.log("User already registered");
-          socket.on("registerUserAck", () => {
-            socket.emit("userList", "User already registered");
-          });
+          socket.emit("userList", "User already registered");
         }
       } else {
         console.log("User id is not provided", userId);
-        socket.on("registerUserAck", () => {
-          socket.emit("userList", "User id is not provided");
-        });
+        socket.emit("userList", "User id is not provided");
       }
     });
 
     // Join a room
-    socket.on(
-      "createGroup",
-      async ({ groupName, description, grpIcon, grpTags, userId }) => {
-        try {
-          const newGroup = await GroupInfo.create({
-            grpName: groupName,
-            description,
-            grpIcon,
-            grpTags,
-          });
-          await GroupMembers.create({
-            groupId: newGroup._id,
-            userId,
-            isAdmin: true,
-          });
-          socket.emit("groupCreated", { groupId: newGroup._id });
-        } catch (error) {
-          console.error("Error creating group:", error);
-        }
+    socket.on("createGroup", async ({ groupName, description, grpIcon, grpTags, userId }) => {
+      try {
+        const newGroup = await GroupInfo.create({
+          grpName: groupName,
+          description,
+          grpIcon,
+          grpTags,
+        });
+        await GroupMembers.create({
+          groupId: newGroup._id,
+          userId,
+          isAdmin: true,
+        });
+        socket.emit("groupCreated", { groupId: newGroup._id });
+      } catch (error) {
+        console.error("Error creating group:", error);
       }
-    );
+    });
 
     socket.on("joinGroup", async ({ groupId, userId }) => {
       try {
         // Check if the user is already a member of the group
         const isMember = await GroupMembers.findOne({ groupId, userId });
         if (!isMember) {
-          await GroupMembers.findOneAndDelete({ groupId, userId });
-          // Leave the socket from a room named by groupId
-          socket.leave(groupId);
-          // Emit to the user that they have left the group
-          socket.emit("groupLeft", { groupId });
-          // Broadcast to all other group members
-          socket.to(groupId).emit("userLeftGroup", { userId, groupId });
+          await GroupMembers.create({ groupId, userId });
+          socket.join(groupId);
+          socket.emit("groupJoined", { groupId });
+          socket.to(groupId).emit("userJoinedGroup", { userId, groupId });
         } else {
           socket.emit("alreadyInGroup", { groupId });
         }
@@ -79,7 +67,9 @@ export const socketHandler = (io) => {
     socket.on("leaveGroup", async ({ groupId, userId }) => {
       try {
         await GroupMembers.findOneAndDelete({ groupId, userId });
+        socket.leave(groupId);
         socket.emit("groupLeft", { groupId });
+        socket.to(groupId).emit("userLeftGroup", { userId, groupId });
       } catch (error) {
         console.error("Error leaving group:", error);
       }
@@ -93,47 +83,7 @@ export const socketHandler = (io) => {
           grpid: groupId,
           message,
         });
-        const members = await GroupMembers.find({ groupId: groupId }).select(
-          "_id"
-        );
-        members.forEach((member) => {
-          const receiverSocketId = userSocketMap.get(member.userId.toString());
-          if (receiverSocketId) {
-            io.to(receiverSocketId).emit("newGroupMessage", {
-              groupId,
-              message: newMessage,
-            });
-          }
-        });
-      } catch (error) {
-        console.error("Error sending message to group:", error);
-      }
-    });
-
-    // Leave Group
-    socket.on("leaveGroup", async ({ groupId, userId }) => {
-      try {
-        await GroupMembers.findOneAndDelete({ groupId, userId });
-        socket.emit("groupLeft", { groupId });
-      } catch (error) {
-        console.error("Error leaving group:", error);
-      }
-    });
-
-    // Message in Group
-    socket.on("groupMessage", async ({ groupId, userId, message }) => {
-      try {
-        const newMessage = await Chat.create({
-          Owner: userId,
-          grpid: groupId,
-          message,
-        });
-        const members = await GroupMembers.find({ 
-          groupId, 
-          userId: { $ne: userId } 
-        }).select(
-          "_id"
-        );
+        const members = await GroupMembers.find({ groupId, userId: { $ne: userId } }).select("userId");
         members.forEach((member) => {
           const receiverSocketId = userSocketMap.get(member.userId.toString());
           if (receiverSocketId) {
@@ -151,30 +101,23 @@ export const socketHandler = (io) => {
 
     // Handle private message
     socket.on("privateMessage", async (senderId, receiverId, message) => {
-      
       console.log(`Message from ${senderId} to ${receiverId}: ${message}`);
 
       // Use the map to get the receiver's socketId
       const receiverSocketId = userSocketMap.get(receiverId);
       const senderSocketId = userSocketMap.get(senderId);
-      if (1) {
+      if (receiverSocketId) {
         console.log(`Receiver ${receiverId} found`);
-        // socket.emit('newMessage', "Working");
-
 
         try {
           const newMessage = new Chat({
             Owner: senderId,
             Recipient: receiverId,
             message: message,
-            // filelink:
-            
-            //  this message is not part of a group chat, hence grpid is not set
           });
           await newMessage.save();
-          io.to(receiverSocketId).emit("newMessage", newMessage);//req testing
-          io.to(senderSocketId).emit("sentMessage", newMessage);//req testing
-          
+          io.to(receiverSocketId).emit("newMessage", newMessage);
+          io.to(senderSocketId).emit("sentMessage", newMessage);
 
           console.log("Message saved to database");
         } catch (error) {
@@ -195,10 +138,10 @@ export const socketHandler = (io) => {
             requester: fromUserId,
             recipient: toUserId,
           });
+          io.to(receiverSocketId).emit("chatRequest", { fromUserId });
         } catch (error) {
-          console.log(error);
+          console.error("Error sending chat request:", error);
         }
-        io.to(receiverSocketId).emit("chatRequest", { fromUserId });
       }
     });
 
@@ -206,31 +149,37 @@ export const socketHandler = (io) => {
     socket.on("acceptChatRequest", async ({ fromUserId, toUserId }) => {
       const senderSocketId = userSocketMap.get(fromUserId);
       if (senderSocketId) {
-        await  ChatRequests.updateOne(
-          { requester: fromUserId, recipient: toUserId },
-          { status: "accepted" }
-        );
-        io.to(senderSocketId).emit("chatRequestAccepted", { toUserId });
+        try {
+          await ChatRequests.updateOne(
+            { requester: fromUserId, recipient: toUserId },
+            { status: "accepted" }
+          );
+          io.to(senderSocketId).emit("chatRequestAccepted", { toUserId });
+        } catch (error) {
+          console.error("Error accepting chat request:", error);
+        }
       }
     });
 
     socket.on("declineChatRequest", async ({ fromUserId, toUserId }) => {
       const senderSocketId = userSocketMap.get(fromUserId);
       if (senderSocketId) {
-      await  ChatRequests.updateOne(
-          { requester: fromUserId, recipient: toUserId },
-          { status: "declined" }
-        );
-        io.to(senderSocketId).emit("chatRequestDeclined", { toUserId });
+        try {
+          await ChatRequests.updateOne(
+            { requester: fromUserId, recipient: toUserId },
+            { status: "declined" }
+          );
+          io.to(senderSocketId).emit("chatRequestDeclined", { toUserId });
+        } catch (error) {
+          console.error("Error declining chat request:", error);
+        }
       }
     });
 
     // Cleanup on disconnect
     socket.on("disconnect", () => {
       console.log(`User disconnected ${socket.id}`);
-      // Remove the user from the map
-      const entries = userSocketMap.entries();
-      for (let [userId, socketId] of entries) {
+      for (let [userId, socketId] of userSocketMap.entries()) {
         if (socketId === socket.id) {
           userSocketMap.delete(userId);
           break;
