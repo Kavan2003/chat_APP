@@ -201,10 +201,55 @@ res.status(500).json(new ApiError(500, "Failed to fetch messages", error));
 
 const SendRequest = asyncHandler(async (req, res, next) => {
 // send request to user 
+const  id  = req.query;
+const ownerid = req.user.id;
+if (!id) {
+  throw new ApiError(400, "Request ID is required");
+}
+if (!ownerid) {
+ throw new ApiError(401, "Unauthorized"); 
+}
+const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
+  if(request){
+    throw new ApiError(400, "Request already exists");
+  }
+  const newRequest = new ChatRequests({
+    requester: ownerid,
+    recipient: id,
+    status: "pending",
+  });
+  await newRequest.save();
+
+  res.status(201).json(new ApiResponse(201, "Request sent successfully", newRequest));
+
 
 });
 const RespondtoRequest = asyncHandler(async (req, res, next) => {
   // to a received request respond to it wiith accept or reject
+  const { id, response } = req.query;
+  const ownerid = req.user.id;
+  if (!id || !response) {
+    throw new ApiError(400, "Request ID and response are required");
+  }
+  if (!ownerid) {
+    throw new ApiError(401, "Unauthorized");
+  }
+  const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
+  if (!request) {
+    throw new ApiError(404, "Request not found");
+  }
+  if (request.status !== "pending") {
+    throw new ApiError(400, "Request has already been responded to");
+  }
+  if (response === "accept") {
+    request.status = "accepted";
+  } else if (response === "reject") {
+    request.status = "declined";
+  } else {
+    throw new ApiError(400, "Invalid response");
+  }
+  await request.save();
+  res.status(200).json(new ApiResponse(200, "Request responded to successfully", request));
 
   
   });
@@ -225,12 +270,9 @@ const CheckRequestStatus = asyncHandler(async (req, res, next) => {
   }
   res.status(200).json(new ApiResponse(200, "Request status", request.status));
   
-
-
-  
   });
 
 
 
 
-export { listChat,SearchHistorys, searchQuery,getMessages };
+export { listChat,SearchHistorys, searchQuery,getMessages,SendRequest,RespondtoRequest,CheckRequestStatus };
