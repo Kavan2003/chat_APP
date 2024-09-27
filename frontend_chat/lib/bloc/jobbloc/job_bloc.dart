@@ -23,7 +23,10 @@ class JobBloc extends Bloc<JobEvent, JobState> {
             Uri.parse('$apiroute$jobRoute/search?keyword=${event.query}');
         final response = await http.get(
           url,
-          headers: {'Authorization': 'Bearer $accesstoken'},
+          headers: {
+            'Authorization': 'Bearer $accesstoken',
+            'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
+          },
         );
         print(response.body);
         final jobresponse = ApiResponse<AllJobModel>.fromJson(
@@ -46,6 +49,7 @@ class JobBloc extends Bloc<JobEvent, JobState> {
           url,
           headers: {
             'Authorization': 'Bearer $accesstoken',
+            'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
           },
         );
         print(response.body);

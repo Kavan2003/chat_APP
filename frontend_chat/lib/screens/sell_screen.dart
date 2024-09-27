@@ -5,7 +5,7 @@ import 'package:frontend_chat/bloc/sell/sell_bloc.dart';
 import 'package:frontend_chat/models/sell_model.dart';
 import 'package:frontend_chat/utils/component/bottombar.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_for_web/image_picker_for_web.dart';
+// import 'package:image_picker_for_web/image_picker_for_web.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});

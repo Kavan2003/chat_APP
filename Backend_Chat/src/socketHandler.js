@@ -106,6 +106,10 @@ export const socketHandler = (io) => {
       // Use the map to get the receiver's socketId
       const receiverSocketId = userSocketMap.get(receiverId);
       const senderSocketId = userSocketMap.get(senderId);
+
+//success sent message
+
+
       if (receiverSocketId) {
         console.log(`Receiver ${receiverId} found`);
 

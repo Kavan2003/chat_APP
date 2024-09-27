@@ -24,6 +24,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           url,
           headers: {
             'Authorization': 'Bearer $accesstoken',
+            'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
           },
         );
         print(response.body);
@@ -50,6 +51,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
           url,
           headers: {
             'Authorization': 'Bearer $accesstoken',
+            'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
           },
         );
         print(response.body);

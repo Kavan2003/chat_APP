@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/authBloc/auth_bloc.dart';
 import 'package:frontend_chat/screens/chatList_screen.dart';
+import 'package:frontend_chat/utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final usernameController = TextEditingController();
+  final temp = TextEditingController();
+
   bool isUsernameLogin = true;
 
   @override
@@ -42,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ChatlistScreen(),
+                  builder: (context) => ChatListScreen(),
                 ),
               );
             } else if (state is AuthFailedState) {
@@ -151,9 +154,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.lock),
                     ),
                   ),
+                  // TextField(
+                  //   controller: temp,
+                  //   obscureText: false,
+                  //   decoration: const InputDecoration(
+                  //     labelText: 'url',
+                  //     border: OutlineInputBorder(),
+                  //     // prefixIcon: Icon(Icons),
+                  //   ),
+                  // ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
+                      //  basedomain = temp.text;
+
                       if (isUsernameLogin
                           ? usernameController.text.isNotEmpty &&
                               passwordController.text.isNotEmpty

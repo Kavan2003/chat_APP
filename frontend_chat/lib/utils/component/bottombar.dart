@@ -12,8 +12,8 @@ class BottomBar extends StatelessWidget {
   void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const ChatlistScreen()));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => ChatListScreen()));
         break;
       case 1:
         Navigator.push(context,

@@ -3,7 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:frontend_chat/models/user_models.dart';
 import 'package:frontend_chat/repositories/api_response.dart';
 import 'package:frontend_chat/utils/constants.dart';
+import 'package:frontend_chat/utils/global.dart';
 import 'package:http/http.dart' as http;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 part 'auth_event.dart';
@@ -28,13 +31,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 //store userResponse.data!.accessToken; in local storage
 
         //final prefs;
+
         if (userResponse.status == "true") {
-          emit(AuthSuccessState(
-            userResponse.data!,
-          ));
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('accessToken', userResponse.data!.accessToken);
           await prefs.setString('id', userResponse.data!.id);
+          globalSocket = IO.io(websocket, <String, dynamic>{
+            'transports': ['websocket'],
+            'autoConnect': false,
+          });
+          globalSocket!.connect();
+          globalSocket!.emit('registerUser', userResponse.data!.id);
+//
+          emit(AuthSuccessState(
+            userResponse.data!,
+          ));
         } else {
           emit(AuthFailedState(
             userResponse.message,

@@ -9,7 +9,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'dart:html' as html;
+// import 'dart:html' as html;
 
 part 'sell_event.dart';
 part 'sell_state.dart';
@@ -28,7 +28,8 @@ class SellBloc extends Bloc<SellEvent, SellState> {
             url,
             headers: {
               'Authorization': 'Bearer $accesstoken',
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
             },
           );
           print(response.body);
@@ -55,7 +56,8 @@ class SellBloc extends Bloc<SellEvent, SellState> {
             url,
             headers: {
               'Authorization': 'Bearer $accesstoken',
-              'content-type': 'application/json'
+              'content-type': 'application/json',
+              'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
             },
           );
           print(response.body);
@@ -79,38 +81,38 @@ class SellBloc extends Bloc<SellEvent, SellState> {
           final url = Uri.parse('$apiroute$sellRoute');
 
           if (kIsWeb) {
-            var request = html.FormData();
-            request.append('name', event.name);
-            request.append('description', event.description);
-            request.append('price', event.price);
-            // for (var i = 0; i < event.images.length; i++) {
+            // var request = html.FormData();
+            // request.append('name', event.name);
+            // request.append('description', event.description);
+            // request.append('price', event.price);
+            // // for (var i = 0; i < event.images.length; i++) {
 
-            // }
-            var file = html.File(event.images, 'image/jpeg');
-            request.appendBlob('images', file);
+            // // }
+            // var file = html.File(event.images, 'image/jpeg');
+            // request.appendBlob('images', file);
 
-            var xhr = html.HttpRequest();
-            xhr.open('POST', url.toString());
-            xhr.setRequestHeader('Authorization', 'Bearer $accesstoken');
-            xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-            xhr.send(request);
+            // var xhr = html.HttpRequest();
+            // xhr.open('POST', url.toString());
+            // xhr.setRequestHeader('Authorization', 'Bearer $accesstoken');
+            // xhr.setRequestHeader('Content-Type', 'multipart/form-data');
+            // xhr.send(request);
 
-            // await xhr.onLoadEnd.first;
-            xhr.onLoadEnd.listen((e) {
-              if (xhr.status == 200) {
-                print(xhr.responseText);
-                final responseString = xhr.responseText;
-                final sellresponse = ApiResponse<SellModel>.fromJson(
-                    responseString!, (json) => SellModel.fromJson(json));
-                if (sellresponse.status == "true") {
-                  emit(SellCreateSuccess(sellresponse.data!));
-                } else {
-                  emit(SellError(sellresponse.message));
-                }
-              } else {
-                emit(SellError(xhr.responseText!));
-              }
-            });
+            // // await xhr.onLoadEnd.first;
+            // xhr.onLoadEnd.listen((e) {
+            //   if (xhr.status == 200) {
+            //     print(xhr.responseText);
+            //     final responseString = xhr.responseText;
+            //     final sellresponse = ApiResponse<SellModel>.fromJson(
+            //         responseString!, (json) => SellModel.fromJson(json));
+            //     if (sellresponse.status == "true") {
+            //       emit(SellCreateSuccess(sellresponse.data!));
+            //     } else {
+            //       emit(SellError(sellresponse.message));
+            //     }
+            //   } else {
+            //     emit(SellError(xhr.responseText!));
+            //   }
+            // });
           } else {
             var request = http.MultipartRequest('POST', url)
               ..headers.addAll({
