@@ -1,8 +1,10 @@
 import { Chat } from "./models/chat.models.js";
 import { ChatRequests } from "./models/chatRequest.models.js";
 import { GroupMembers } from "./models/groupMembers.models.js";
+import mongoose from 'mongoose';
 
-// socketHandler.js
+
+// socket Handler.js
 export const socketHandler = (io) => {
   const userSocketMap = new Map(); // Map to keep track of userId and socketId
 
@@ -132,8 +134,7 @@ export const socketHandler = (io) => {
       }
     });
 
-    // Handle sending chat requests
-    socket.on("sendChatRequest", async ({ fromUserId, toUserId }) => {
+socket.on("sendChatRequest", async ({ fromUserId, toUserId }) => {
       const receiverSocketId = userSocketMap.get(toUserId);
 
       if (receiverSocketId) {
@@ -152,12 +153,18 @@ export const socketHandler = (io) => {
     // Handle accepting chat requests
     socket.on("acceptChatRequest", async ({ fromUserId, toUserId }) => {
       const senderSocketId = userSocketMap.get(fromUserId);
+      
       if (senderSocketId) {
         try {
+          console.log("Accepting chat request from", fromUserId, "to", toUserId);
+          
           await ChatRequests.updateOne(
-            { requester: fromUserId, recipient: toUserId },
+            { requester:  toUserId , recipient:fromUserId },
             { status: "accepted" }
+            
           );
+          console.log("Accepting chat request from", fromUserId, "to", toUserId);
+
           io.to(senderSocketId).emit("chatRequestAccepted", { toUserId });
         } catch (error) {
           console.error("Error accepting chat request:", error);
@@ -170,8 +177,9 @@ export const socketHandler = (io) => {
       if (senderSocketId) {
         try {
           await ChatRequests.updateOne(
-            { requester: fromUserId, recipient: toUserId },
+            { requester:  toUserId , recipient:fromUserId },
             { status: "declined" }
+            
           );
           io.to(senderSocketId).emit("chatRequestDeclined", { toUserId });
         } catch (error) {
@@ -179,6 +187,8 @@ export const socketHandler = (io) => {
         }
       }
     });
+
+ 
 
     // Cleanup on disconnect
     socket.on("disconnect", () => {

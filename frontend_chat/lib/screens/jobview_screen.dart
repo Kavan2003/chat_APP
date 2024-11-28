@@ -40,29 +40,31 @@ class _JobViewScreenState extends State<JobViewScreen> {
             return Center(child: CircularProgressIndicator());
           } else if (state is JobLoaded) {
             final job = state.job;
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Job Description: ${job.jobDescription}',
-                      style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Company Website: ${job.companyWebsite}',
-                      style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Skills: ${job.skills.join(', ')}',
-                      style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Owner: ${job.owner.username}',
-                      style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Created At: ${job.createdAt}',
-                      style: TextStyle(fontSize: 18)),
-                  SizedBox(height: 8),
-                  Text('Updated At: ${job.updatedAt}',
-                      style: TextStyle(fontSize: 18)),
-                ],
+            return SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Job Description: ${job.jobDescription}',
+                        style: TextStyle(fontSize: 18)),
+                    SizedBox(height: 8),
+                    Text('Company Website: ${job.companyWebsite}',
+                        style: TextStyle(fontSize: 18)),
+                    SizedBox(height: 8),
+                    Text('Skills: ${job.skills.join(', ')}',
+                        style: TextStyle(fontSize: 18)),
+                    SizedBox(height: 8),
+                    Text('Owner: ${job.owner.username}',
+                        style: TextStyle(fontSize: 18)),
+                    SizedBox(height: 8),
+                    Text('Created At: ${job.createdAt}',
+                        style: TextStyle(fontSize: 18)),
+                    SizedBox(height: 8),
+                    Text('Updated At: ${job.updatedAt}',
+                        style: TextStyle(fontSize: 18)),
+                  ],
+                ),
               ),
             );
           } else if (state is JobError) {

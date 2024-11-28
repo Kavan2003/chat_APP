@@ -27,3 +27,9 @@ final class ChatMessages extends ChatsState {
 
   ChatMessages(this.messages);
 }
+
+final class Status extends ChatsState {
+  final RequestStatusModel status;
+
+  Status(this.status);
+}

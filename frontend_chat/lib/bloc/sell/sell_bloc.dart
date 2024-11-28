@@ -1,7 +1,7 @@
 import 'dart:convert';
-
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:frontend_chat/bloc/jobbloc/job_bloc.dart';
 import 'package:frontend_chat/models/sell_model.dart';
 import 'package:frontend_chat/repositories/api_response.dart';
 import 'package:frontend_chat/utils/constants.dart';
@@ -9,7 +9,6 @@ import 'package:http_parser/http_parser.dart';
 import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-// import 'dart:html' as html;
 
 part 'sell_event.dart';
 part 'sell_state.dart';
@@ -32,6 +31,7 @@ class SellBloc extends Bloc<SellEvent, SellState> {
               'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
             },
           );
+
           print(response.body);
           final sellresponse = ApiResponse<AllSellModel>.fromJson(
               response.body, (json) => AllSellModel.fromJson(json));
@@ -72,72 +72,43 @@ class SellBloc extends Bloc<SellEvent, SellState> {
         }
       },
     );
+
     on<SellCreateEvent>(
       (event, emit) async {
-        emit(SellLoading());
         try {
+          emit(SellLoading());
+
           final prefs = await SharedPreferences.getInstance();
           final accesstoken = prefs.getString('accessToken') ?? '';
           final url = Uri.parse('$apiroute$sellRoute');
 
-          if (kIsWeb) {
-            // var request = html.FormData();
-            // request.append('name', event.name);
-            // request.append('description', event.description);
-            // request.append('price', event.price);
-            // // for (var i = 0; i < event.images.length; i++) {
-
-            // // }
-            // var file = html.File(event.images, 'image/jpeg');
-            // request.appendBlob('images', file);
-
-            // var xhr = html.HttpRequest();
-            // xhr.open('POST', url.toString());
-            // xhr.setRequestHeader('Authorization', 'Bearer $accesstoken');
-            // xhr.setRequestHeader('Content-Type', 'multipart/form-data');
-            // xhr.send(request);
-
-            // // await xhr.onLoadEnd.first;
-            // xhr.onLoadEnd.listen((e) {
-            //   if (xhr.status == 200) {
-            //     print(xhr.responseText);
-            //     final responseString = xhr.responseText;
-            //     final sellresponse = ApiResponse<SellModel>.fromJson(
-            //         responseString!, (json) => SellModel.fromJson(json));
-            //     if (sellresponse.status == "true") {
-            //       emit(SellCreateSuccess(sellresponse.data!));
-            //     } else {
-            //       emit(SellError(sellresponse.message));
-            //     }
-            //   } else {
-            //     emit(SellError(xhr.responseText!));
-            //   }
-            // });
-          } else {
-            var request = http.MultipartRequest('POST', url)
-              ..headers.addAll({
-                'Authorization': 'Bearer $accesstoken',
-                'Content-Type': 'application/json',
-              })
-              ..fields['name'] = event.name
-              ..fields['description'] = event.description
-              ..fields['price'] = event.price;
-            for (var i = 0; i < event.images.length; i++) {
-              request.files.add(await http.MultipartFile.fromPath(
-                'images',
-                event.images[i],
-                contentType: MediaType('image', 'jpeg'),
-              ));
-            }
-            final response = await request.send();
-            final responseString = await response.stream.bytesToString();
-            print(responseString);
-            final sellresponse = ApiResponse<SellModel>.fromJson(
-                responseString, (json) => SellModel.fromJson(json));
-            sellresponse.status == "true"
-                ? emit(SellCreateSuccess(sellresponse.data!))
-                : emit(SellError(sellresponse.message));
+          var request = http.MultipartRequest('POST', url)
+            ..headers.addAll({
+              'Authorization': 'Bearer $accesstoken',
+              'Content-Type': 'application/json',
+            })
+            ..fields['name'] = event.name
+            ..fields['description'] = event.description
+            ..fields['price'] = event.price;
+          for (var i = 0; i < event.images.length; i++) {
+            request.files.add(await http.MultipartFile.fromPath(
+              'images',
+              event.images[i],
+              contentType: MediaType('image', 'jpeg'),
+            ));
           }
+          final response = await request.send();
+          final responseString = await response.stream.bytesToString();
+          if (response.statusCode == 200) {
+            emit(SellLoading());
+            add(SellSearchEvent(""));
+          }
+          print(responseString);
+          final sellresponse = ApiResponse<SellModel>.fromJson(
+              responseString, (json) => SellModel.fromJson(json));
+          sellresponse.status == "true"
+              ? emit(SellCreateSuccess(sellresponse.data!))
+              : emit(SellError(sellresponse.message));
         } catch (e) {
           print('Api Fetch Error on sell $e');
           emit(SellError(e.toString()));

@@ -17,7 +17,7 @@ final class AuthRegisterEvent extends AuthEvent {
   final String password;
   final String yearOfStudy;
   final String branch;
-  final List<String> skills;
+  final String skills;
   final String description;
   final String resume;
 

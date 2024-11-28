@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/authBloc/auth_bloc.dart';
-import 'package:frontend_chat/models/user_models.dart'; // Assuming this exists for UserModel
 import 'package:file_picker/file_picker.dart';
+import 'package:frontend_chat/theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final skillsController = TextEditingController();
   final descriptionController = TextEditingController();
   String? resumePath;
+
   Future<void> pickResume() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if (result != null) {
@@ -32,11 +33,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white10,
+      backgroundColor: AppTheme.backgroundColor, // Use theme background color
       appBar: AppBar(
-        title: const Text('Register for Chat'),
-        backgroundColor: Colors.deepPurple[400],
+        title: Text(
+          'Register for Chat',
+          style: AppTheme.heading1.copyWith(color: AppTheme.onPrimaryColor),
+        ),
+        backgroundColor: AppTheme.primaryColor,
         elevation: 0,
+        iconTheme: IconThemeData(color: AppTheme.onPrimaryColor),
       ),
       body: SingleChildScrollView(
         child: BlocConsumer<AuthBloc, AuthState>(
@@ -45,8 +50,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                      'Welcome ${state.user.username}! Registration successful.'),
-                  backgroundColor: Colors.green,
+                    'Welcome ${state.user.username}! Registration successful.',
+                    style: AppTheme.bodyText
+                        .copyWith(color: AppTheme.onPrimaryColor),
+                  ),
+                  backgroundColor: AppTheme.primaryColor,
                 ),
               );
             } else if (state is AuthFailedState) {
@@ -54,11 +62,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('Registration Failed'),
-                    content: Text(state.message),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    title: Text(
+                      'Registration Failed',
+                      style: AppTheme.heading2,
+                    ),
+                    content: Text(
+                      state.message,
+                      style: AppTheme.bodyText,
+                    ),
                     actions: <Widget>[
                       TextButton(
-                        child: const Text('OK'),
+                        child: Text(
+                          'OK',
+                          style: AppTheme.buttonText
+                              .copyWith(color: AppTheme.primaryColor),
+                        ),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
@@ -74,124 +95,95 @@ class _RegisterScreenState extends State<RegisterScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             return Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  _buildTextField(
                     controller: usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
-                    ),
+                    labelText: 'Username',
+                    icon: Icons.person,
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
-                    ),
+                    labelText: 'Email',
+                    icon: Icons.email,
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: passwordController,
+                    labelText: 'Password',
+                    icon: Icons.lock,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
-                    ),
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: yearOfStudyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Year of Study',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.school),
-                    ),
+                    labelText: 'Year of Study',
+                    icon: Icons.school,
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: branchController,
-                    decoration: const InputDecoration(
-                      labelText: 'Branch',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.account_tree),
-                    ),
+                    labelText: 'Branch',
+                    icon: Icons.account_tree,
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: skillsController,
-                    decoration: const InputDecoration(
-                        labelText: 'Skills (comma separated)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.code)),
+                    labelText: 'Skills (comma separated)',
+                    icon: Icons.code,
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     controller: descriptionController,
-                    decoration: const InputDecoration(
-                        labelText: 'Description',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.description)),
+                    labelText: 'Description',
+                    icon: Icons.description,
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: pickResume,
-                    child: Text('Add Resume'),
-                  ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  resumePath == null
+                      ? ElevatedButton.icon(
+                          onPressed: pickResume,
+                          icon: const Icon(Icons.attach_file),
+                          label: Text(
+                            'Add Resume',
+                            style: AppTheme.buttonText,
+                          ),
+                          style: AppTheme.primaryButton,
+                        )
+                      : Container(
+                          padding: const EdgeInsets.all(15),
+                          child: Text(
+                            'Resume selected: ${resumePath!}',
+                            style: AppTheme.bodyText,
+                          ),
+                        ),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      if (usernameController.text.isNotEmpty &&
-                          emailController.text.isNotEmpty &&
-                          passwordController.text.isNotEmpty &&
-                          yearOfStudyController.text.isNotEmpty &&
-                          branchController.text.isNotEmpty &&
-                          skillsController.text.isNotEmpty &&
-                          descriptionController.text.isNotEmpty &&
-                          resumePath != null) {
+                      if (_areFieldsValid()) {
                         context.read<AuthBloc>().add(
                               AuthRegisterEvent(
-                                  username: usernameController.text,
-                                  email: emailController.text,
-                                  password: passwordController.text,
-                                  yearOfStudy: yearOfStudyController.text,
-                                  branch: branchController.text,
-                                  skills: skillsController.text.split(','),
-                                  description: descriptionController.text,
-                                  resume: resumePath!),
+                                username: usernameController.text,
+                                email: emailController.text,
+                                password: passwordController.text,
+                                yearOfStudy: yearOfStudyController.text,
+                                branch: branchController.text,
+                                skills: skillsController.text,
+                                description: descriptionController.text,
+                                resume: resumePath!,
+                              ),
                             );
                       } else {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Registration Failed'),
-                              content: const Text('Please fill all the fields'),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                        _showErrorDialog(context, 'Please fill all the fields');
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple[400],
-                        padding: const EdgeInsets.symmetric(vertical: 15)),
-                    child: const Text('Register',
-                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                    style: AppTheme.primaryButton,
+                    child: Text(
+                      'Register',
+                      style: AppTheme.buttonText,
+                    ),
                   ),
                 ],
               ),
@@ -199,6 +191,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+    bool obscureText = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      style: AppTheme.bodyText,
+      decoration: AppTheme.inputDecoration.copyWith(
+        labelText: labelText,
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+      ),
+    );
+  }
+
+  bool _areFieldsValid() {
+    return usernameController.text.isNotEmpty &&
+        emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty &&
+        yearOfStudyController.text.isNotEmpty &&
+        branchController.text.isNotEmpty &&
+        skillsController.text.isNotEmpty &&
+        descriptionController.text.isNotEmpty &&
+        resumePath != null;
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Registration Failed',
+            style: AppTheme.heading2,
+          ),
+          content: Text(
+            message,
+            style: AppTheme.bodyText,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'OK',
+                style:
+                    AppTheme.buttonText.copyWith(color: AppTheme.primaryColor),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

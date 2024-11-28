@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:frontend_chat/models/user_models.dart';
@@ -19,7 +21,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         bool withusername = event.username != null;
         final url = Uri.parse('$apiroute$userRoute$loginRoute');
-        final response = await http.post(url, body: {
+        final response = await http.post(url, headers: {
+          'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
+        }, body: {
           if (withusername) 'username': event.username,
           if (!withusername) 'email': event.email,
           'password': event.password,
@@ -35,13 +39,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (userResponse.status == "true") {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('accessToken', userResponse.data!.accessToken);
+          print("avaiable");
           await prefs.setString('id', userResponse.data!.id);
           globalSocket = IO.io(websocket, <String, dynamic>{
-            'transports': ['websocket'],
+            'transports': ['websocket', 'polling'],
             'autoConnect': false,
           });
+          print("WebSocket initialized with URL: $websocket");
+
           globalSocket!.connect();
           globalSocket!.emit('registerUser', userResponse.data!.id);
+          globalSocket!.on("registerUserAck", (data) {
+            print(data);
+          });
+          print("avaiable");
+          //todo: temp
+          globalSocket!.on('connect', (_) {
+            print('WebSocket connected');
+            globalSocket!.emit('registerUser', userResponse.data!.id);
+            print("User registered with ID: ${userResponse.data!.id}");
+          });
+
+          globalSocket!.on('connect_error', (error) {
+            print('WebSocket connection error: $error');
+          });
+
+          globalSocket!.on('disconnect', (_) {
+            print('WebSocket disconnected');
+          });
+
+          globalSocket!.on("registerUserAck", (data) {
+            print("Received registerUserAck: $data");
+          });
+
 //
           emit(AuthSuccessState(
             userResponse.data!,
@@ -71,31 +101,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ..fields['password'] = event.password
           ..fields['YearOFStudy'] = event.yearOfStudy
           ..fields['Branch'] = event.branch
-          ..fields['skills'] = event.skills.join(',')
+          ..fields['skills'] = event.skills
           ..fields['description'] = event.description;
 
-        if (event.resume != null) {
-          request.files.add(await http.MultipartFile.fromPath(
-            'resume',
-            event.resume,
-            contentType: MediaType('application', 'pdf'),
-          ));
-        }
+        request.files.add(await http.MultipartFile.fromPath(
+          'resume',
+          event.resume,
+          contentType: MediaType('application', 'pdf'),
+        ));
 
         var streamedResponse = await request.send();
         var response = await http.Response.fromStream(streamedResponse);
         print(response.body);
 
-        final userResponse = ApiResponse<UserModel>.fromJson(response.body,
-            (json) => UserModel.fromJson(json['registeredUser']));
-        userResponse.status == "true"
-            ? emit(AuthSuccessState(
-                userResponse.data!,
-              ))
-            : emit(AuthFailedState(
-                userResponse.message,
-                userResponse.status.toString(),
-              ));
+        final userResponse = ApiResponse<UserModel>.fromJson(
+            response.body, (json) => UserModel.fromJson(json));
+        if (userResponse.status == "true") {
+          emit(AuthSuccessState(userResponse.data!));
+        } else {
+          emit(AuthFailedState(
+            userResponse.message,
+            userResponse.status.toString(),
+          ));
+        }
       } catch (error) {
         print('Api Fetch Error $error');
         emit(AuthFailedState(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,7 +7,6 @@ import 'package:frontend_chat/bloc/sell/sell_bloc.dart';
 import 'package:frontend_chat/models/sell_model.dart';
 import 'package:frontend_chat/utils/component/bottombar.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'package:image_picker_for_web/image_picker_for_web.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -15,7 +16,6 @@ class SellScreen extends StatefulWidget {
 }
 
 class _SellScreenState extends State<SellScreen> {
-  // final SellBloc _sellBloc = SellBloc();
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -33,106 +33,7 @@ class _SellScreenState extends State<SellScreen> {
           showDialog(
               context: context,
               builder: (context) {
-                TextEditingController sellDescriptionController =
-                    TextEditingController();
-                TextEditingController nameController = TextEditingController();
-                TextEditingController priceController = TextEditingController();
-                List<XFile>? imageFiles;
-                List<String>? _imageFilespath;
-                Future<void> _pickImages() async {
-                  final ImagePicker _picker = ImagePicker();
-                  // final ImagePickerPlugin pickerPlugin = ImagePickerPlugin();
-                  if (kIsWeb) {
-                    // Web image picker
-                    imageFiles = await _picker.pickMultiImage();
-                  } else {
-                    // Mobile image picker
-                    imageFiles = await _picker.pickMultiImage();
-                  }
-                  if (imageFiles != null) {
-                    _imageFilespath = imageFiles!.map((e) => e.path).toList();
-                  }
-                  print('Image path: $_imageFilespath');
-                }
-
-                return AlertDialog(
-                    title: const Text('Create Sell item'),
-                    content: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: nameController,
-                            decoration: const InputDecoration(
-                                hintText: 'Enter Name of Product'),
-                          ),
-                          TextField(
-                            controller: sellDescriptionController,
-                            decoration: const InputDecoration(
-                                hintText: 'Sell Item Description'),
-                          ),
-                          TextField(
-                            controller: priceController,
-                            decoration: const InputDecoration(
-                                hintText: 'Sell Item Price'),
-                          ),
-
-                          //pick image check platfor specific image_picker_for_web web and image_picker_for for mobile
-                          ElevatedButton(
-                            onPressed: _pickImages,
-                            child: const Text('Pick Images'),
-                          ),
-                          if (imageFiles != null)
-                            Wrap(
-                              children: imageFiles!.map((file) {
-                                return Image.network(file.path,
-                                    width: 100, height: 100);
-                              }).toList(),
-                            ),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                          onPressed: () {
-                            // Create Sell API call
-                            if (_imageFilespath != null) {
-                              context.read<SellBloc>().add(SellCreateEvent(
-                                  nameController.text,
-                                  sellDescriptionController.text,
-                                  priceController.text,
-                                  _imageFilespath!));
-                            } else {
-                              //show error
-
-                              showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                        title: const Text('Error'),
-                                        content: const SingleChildScrollView(
-                                            child: ListBody(children: <Widget>[
-                                          Text('Please select image'),
-                                        ])),
-                                        actions: <Widget>[
-                                          TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text('OK')),
-                                        ]);
-                                  });
-                            }
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Create'))
-                    ]);
+                return CreateSellItemDialog();
               });
         },
         child: const Icon(Icons.add),
@@ -143,7 +44,6 @@ class _SellScreenState extends State<SellScreen> {
           controller: _searchController,
           decoration: const InputDecoration(
             hintText: 'Search...',
-            border: InputBorder.none,
           ),
           onSubmitted: (value) {
             context.read<SellBloc>().add(SellSearchEvent(value));
@@ -152,6 +52,9 @@ class _SellScreenState extends State<SellScreen> {
       ),
       body: BlocBuilder<SellBloc, SellState>(
         builder: (context, state) {
+          if (state is SellCreateSuccess) {
+            context.read<SellBloc>().add(SellSearchEvent(''));
+          }
           if (state is SellError) {
             return Center(child: Text(state.message));
           } else if (state is SellLoading) {
@@ -164,6 +67,8 @@ class _SellScreenState extends State<SellScreen> {
               child: _buildSellList(state.sell),
             );
           } else {
+            // context.read<SellBloc>().add(SellSearchEvent(''));
+
             return Center(
                 child: Text('Unknown Error State = ${state.toString()}'));
           }
@@ -174,7 +79,7 @@ class _SellScreenState extends State<SellScreen> {
 
   Widget _buildSellList(AllSellModel sell) {
     return ListView.builder(
-        itemCount: sell.data.length, // Assuming only one item for simplicity
+        itemCount: sell.data.length,
         itemBuilder: (context, index) {
           return Card(
               child: Padding(
@@ -189,7 +94,7 @@ class _SellScreenState extends State<SellScreen> {
                         ),
                         _buildImageGallery(sell.data[index].images),
                         const SizedBox(height: 10),
-                        Text('Description: ${sell.data[index].description}'),
+                        Text('Title: ${sell.data[index].description}'),
                         const SizedBox(height: 10),
                         Text('Price: \$${sell.data[index].price}'),
                         const SizedBox(height: 10),
@@ -200,6 +105,7 @@ class _SellScreenState extends State<SellScreen> {
   }
 
   Widget _buildImageGallery(List<String> images) {
+    print('Images: $images');
     return SizedBox(
         height: 200,
         child: ListView.builder(
@@ -210,5 +116,112 @@ class _SellScreenState extends State<SellScreen> {
                   padding: const EdgeInsets.all(8.0),
                   child: Image.network(images[index]));
             }));
+  }
+}
+
+class CreateSellItemDialog extends StatefulWidget {
+  @override
+  _CreateSellItemDialogState createState() => _CreateSellItemDialogState();
+}
+
+class _CreateSellItemDialogState extends State<CreateSellItemDialog> {
+  final TextEditingController sellDescriptionController =
+      TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  List<XFile>? imageFiles;
+  List<String>? _imageFilespath;
+
+  Future<void> _pickImages() async {
+    final ImagePicker _picker = ImagePicker();
+    if (kIsWeb) {
+      imageFiles = await _picker.pickMultiImage();
+    } else {
+      imageFiles = await _picker.pickMultiImage();
+    }
+    if (imageFiles != null) {
+      setState(() {
+        _imageFilespath = imageFiles!.map((e) => e.path).toList();
+      });
+    }
+    print('Image path: $_imageFilespath');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Create Sell item'),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.8,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration:
+                  const InputDecoration(hintText: 'Enter Name of Product'),
+            ),
+            TextField(
+              controller: sellDescriptionController,
+              decoration:
+                  const InputDecoration(hintText: 'Sell Item Description'),
+            ),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(hintText: 'Sell Item Price'),
+            ),
+            ElevatedButton(
+              onPressed: _pickImages,
+              child: const Text('Pick Images'),
+            ),
+            if (imageFiles != null)
+              Wrap(
+                children: imageFiles!.map((file) {
+                  return Image.file(File(file.path), width: 100, height: 100);
+                }).toList(),
+              )
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            if (_imageFilespath != null) {
+              context.read<SellBloc>().add(SellCreateEvent(
+                  nameController.text,
+                  sellDescriptionController.text,
+                  priceController.text,
+                  _imageFilespath!));
+              Navigator.pop(context);
+            } else {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                        title: const Text('Error'),
+                        content: const SingleChildScrollView(
+                            child: ListBody(children: <Widget>[
+                          Text('Please select image'),
+                        ])),
+                        actions: <Widget>[
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: const Text('OK')),
+                        ]);
+                  });
+            }
+          },
+          child: const Text('Create'),
+        ),
+      ],
+    );
   }
 }

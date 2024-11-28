@@ -20,7 +20,7 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         final prefs = await SharedPreferences.getInstance();
         final accesstoken = prefs.getString('accessToken') ?? '';
         final url =
-            Uri.parse('$apiroute$jobRoute/search?keyword=${event.query}');
+            Uri.parse('$apiroute${jobRoute}search?keyword=${event.query}');
         final response = await http.get(
           url,
           headers: {
@@ -90,12 +90,15 @@ class JobBloc extends Bloc<JobEvent, JobState> {
           headers: {
             'Authorization': 'Bearer $accesstoken',
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning'
           },
         );
         print(response.body);
         final jobresponse = ApiResponse<JobModel>.fromJson(
             response.body, (json) => JobModel.fromJson(json));
-        jobresponse.status == "true" ? {} : emit(JobError(jobresponse.message));
+        jobresponse.status == "true"
+            ? add(JobSearchEvent(''))
+            : emit(JobError(jobresponse.message));
       } catch (e) {
         print('Api Fetch Error on job $e');
         emit(JobError(e.toString()));

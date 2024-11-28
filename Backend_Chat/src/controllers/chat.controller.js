@@ -6,6 +6,7 @@ import Fuse from "fuse.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { SearchHistory } from "../models/searchHistory.models.js";
 import { Chat } from "../models/chat.models.js";
+import mongoose from "mongoose";
 
 const listChat = asyncHandler(async (req, res, next) => {
   try {
@@ -32,7 +33,7 @@ const listChat = asyncHandler(async (req, res, next) => {
     const users = await User.find({ _id: { $in: Array.from(userIds) } }).select(
       "username Avatar"
     );
-    const formattedUsers = users.map(user => ({
+    const formattedUsers = users.map((user) => ({
       id: user._id,
       username: user.username,
       avatar: user.Avatar,
@@ -62,7 +63,7 @@ const searchQuery = asyncHandler(async (req, res, next) => {
     // Set up Fuse.js options
     const options = {
       keys: ["username", "skills", "description", "Branch"],
-      threshold: 0.3, // Adjust the threshold for more or less fuzzy matching
+      threshold: 0.3,
     };
 
     // Create a Fuse instance
@@ -94,7 +95,7 @@ const searchQuery = asyncHandler(async (req, res, next) => {
         resultIds: matchedUserIds,
       });
       await searchHistory.save();
-    } 
+    }
     res.json(new ApiResponse(200, "Search results", matchedUsers));
   } catch (error) {
     console.error("Failed to perform search", error);
@@ -165,52 +166,61 @@ const SearchHistorys = asyncHandler(async (req, res, next) => {
     );
   } catch (error) {
     console.error("Failed to fetch search history", error);
-    res.status(500).json(new ApiError(500, "Failed to fetch search history", error));
+    res
+      .status(500)
+      .json(new ApiError(500, "Failed to fetch search history", error));
   }
 });
 
-
 const getMessages = asyncHandler(async (req, res, next) => {
+  console.log(req.body);
 
-const { ownerId, SrnderId,grpId } = req.body;
-try{
-if((ownerId & SrnderId) || grpId){
-return res.status(400).json(new ApiError(400, "Send either ownerId and SrnderId or grpId"));
-}
-let messages;
-if(ownerId && SrnderId){
-messages = await Chat.find({
-$or: [
-{ sender: ownerId, recipient: SrnderId },
-{ sender: SrnderId, recipient: ownerId },
-],
-});
+  const { ownerId, SrnderId, grpId } = req.body;
+  try {
+    if (!(ownerId && SrnderId) && !grpId) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Send either ownerId and SrnderId or grpId"));
+    }
+    console.log(ownerId, SrnderId, grpId);
 
-}
-else{
-messages = await Chat.find({ groupId: grpId });
-}
-res.json(new ApiResponse(200, "Messages fetched successfully", messages));
-}
-catch(error){
-console.error("Failed to fetch messages", error);
-res.status(500).json(new ApiError(500, "Failed to fetch messages", error));
-}
+    let messages;
+    if (ownerId && SrnderId) {
+      const senderObjectId = new mongoose.Types.ObjectId(SrnderId);
+const recipientObjectId = new mongoose.Types.ObjectId(ownerId);
+console.log("Querying with senderObjectId:", senderObjectId, "and recipientObjectId:", recipientObjectId);
 
+      messages = await Chat.find({
+        $or: [
+          { Owner: recipientObjectId, Recipient: senderObjectId },
+          { Owner: senderObjectId, Recipient: recipientObjectId },
+        ],
+      });
+      console.log("Messages found:", messages);
+
+    } else {
+      messages = await Chat.find({ grpid: grpId });
+    }
+
+    res.json(new ApiResponse(200, "Messages fetched successfully", messages));
+  } catch (error) {
+    console.error("Failed to fetch messages", error);
+    res.status(500).json(new ApiError(500, "Failed to fetch messages", error));
+  }
 });
 
 const SendRequest = asyncHandler(async (req, res, next) => {
-// send request to user 
-const  id  = req.query;
-const ownerid = req.user.id;
-if (!id) {
-  throw new ApiError(400, "Request ID is required");
-}
-if (!ownerid) {
- throw new ApiError(401, "Unauthorized"); 
-}
-const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
-  if(request){
+  // send request to user
+  const { id } = req.query;
+  const ownerid = req.user.id;
+  if (!id) {
+    throw new ApiError(400, "Request ID is required");
+  }
+  if (!ownerid) {
+    throw new ApiError(401, "Unauthorized");
+  }
+  const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
+  if (request) {
     throw new ApiError(400, "Request already exists");
   }
   const newRequest = new ChatRequests({
@@ -220,9 +230,9 @@ const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
   });
   await newRequest.save();
 
-  res.status(201).json(new ApiResponse(201, "Request sent successfully", newRequest));
-
-
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Request sent successfully", newRequest));
 });
 const RespondtoRequest = asyncHandler(async (req, res, next) => {
   // to a received request respond to it wiith accept or reject
@@ -249,30 +259,64 @@ const RespondtoRequest = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, "Invalid response");
   }
   await request.save();
-  res.status(200).json(new ApiResponse(200, "Request responded to successfully", request));
-
-  
-  });
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Request responded to successfully", request));
+});
 const CheckRequestStatus = asyncHandler(async (req, res, next) => {
-  // check the status of a request
-  const id = req.query;
+  const { id } = req.query;
   const ownerid = req.user.id;
 
   if (!id) {
     throw new ApiError(400, "Request ID is required");
   }
   if (!ownerid) {
-   throw new ApiError(401, "Unauthorized"); 
+    throw new ApiError(401, "Unauthorized");
   }
-  const request = await ChatRequests.findOne({ _id: id, recipient: ownerid });
-  if (!request) {
-    throw new ApiError(404, "Request not found");
-  }
-  res.status(200).json(new ApiResponse(200, "Request status", request.status));
-  
+
+  const objectId = new mongoose.Types.ObjectId(id);
+  const ownerObjectId = new mongoose.Types.ObjectId(ownerid);
+
+  const request = await ChatRequests.findOne({
+    requester: objectId,
+    recipient: ownerObjectId,
+  });
+  const request2 = await ChatRequests.findOne({
+    requester: ownerObjectId,
+    recipient: objectId,
   });
 
+  let response;
+  if (request) {
+    response = {
+      status: request.status,
+      canAccept:
+        request.status === "pending" &&
+        request.recipient.toString() === ownerid,
+    };
+  } else if (request2) {
+    response = {
+      status: request2.status,
+      canAccept:
+        request2.status === "pending" &&
+        request2.recipient.toString() === ownerid,
+    };
+  } else {
+    response = {
+      status: "No request",
+      canAccept: false,
+    };
+  }
 
+  res.status(200).json(new ApiResponse(200, "Request status", response));
+});
 
-
-export { listChat,SearchHistorys, searchQuery,getMessages,SendRequest,RespondtoRequest,CheckRequestStatus };
+export {
+  listChat,
+  SearchHistorys,
+  searchQuery,
+  getMessages,
+  SendRequest,
+  RespondtoRequest,
+  CheckRequestStatus,
+};

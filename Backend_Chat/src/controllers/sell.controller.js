@@ -36,7 +36,8 @@ if (!name || !description || !price) {
   });
 
   await newItem.save();
-  res.status(201).json(new ApiResponse(201, "Sell item created successfully", newItem));
+  const ownernewitems = await SellItem.findById(newItem._id).populate("Owner", "-password -refreshToken");
+  res.status(201).json(new ApiResponse(201, "Sell item created successfully", ownernewitems));
 });
 
 export const getAllSellItems = asyncHandler(async (req, res, next) => {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/chats/chats_bloc.dart';
+import 'package:frontend_chat/screens/videocall.dart';
 import 'package:frontend_chat/utils/global.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
 
     // newMessageCounts remove this item
-    newMessageCounts[widget.userId] = 0;
+    newMessageCounts.remove(widget.userId);
 
     context.read<ChatsBloc>().add(ChatConnected(widget.userId));
   }
@@ -37,6 +38,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, 'refresh');
+          },
+        ),
         title: Text('Chat with ${widget.username}'),
       ),
       body: Column(
@@ -46,6 +53,52 @@ class _ChatScreenState extends State<ChatScreen> {
               builder: (context, state) {
                 if (state is ChatsLoading) {
                   return const Center(child: CircularProgressIndicator());
+                } else if (state is Status) {
+                  Text(state.status.status);
+                  if (state.status.status == "No request") {
+                    return Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context
+                              .read<ChatsBloc>()
+                              .add(SendRequest(widget.myId, widget.userId));
+                        },
+                        child: const Text('Send Request'),
+                      ),
+                    );
+                  } else if (state.status.canAccept) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('You have a request'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  context.read<ChatsBloc>().add(AcceptRequest(
+                                      widget.myId, widget.userId));
+                                },
+                                child: const Text('Accept'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  context.read<ChatsBloc>().add(RejectRequest(
+                                      widget.myId, widget.userId));
+                                },
+                                child: const Text('Reject'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return Center(
+                      child: Text(state.status.status),
+                    );
+                  }
                 } else if (state is ChatMessages) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     _scrollController.jumpTo(
@@ -84,38 +137,46 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   );
                 } else if (state is ChatsError) {
-                  return Center(child: Text('Failed to load messages'));
+                  return Center(child: Text(state.message));
                 } else {
                   return const Center(child: Text('No messages available'));
                 }
               },
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message',
-                    ),
+          BlocBuilder<ChatsBloc, ChatsState>(
+            builder: (context, state) {
+              if (state is ChatMessages) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: const InputDecoration(
+                            hintText: 'Type a message',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () {
+                          final message = _messageController.text.trim();
+                          if (message.isNotEmpty) {
+                            context.read<ChatsBloc>().add(ChatSendMessage(
+                                widget.myId, widget.userId, message));
+                            _messageController.clear();
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () {
-                    final message = _messageController.text.trim();
-                    if (message.isNotEmpty) {
-                      context.read<ChatsBloc>().add(
-                          ChatSendMessage(widget.myId, widget.userId, message));
-                      _messageController.clear();
-                    }
-                  },
-                ),
-              ],
-            ),
+                );
+              } else {
+                return Container();
+              }
+            },
           ),
         ],
       ),

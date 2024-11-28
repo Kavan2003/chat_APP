@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bloc/bloc.dart';
 import 'package:frontend_chat/models/Chatlist_models.dart';
 import 'package:frontend_chat/models/chat_models.dart';
+import 'package:frontend_chat/models/request_status_model.dart';
 import 'package:frontend_chat/repositories/api_response.dart';
 import 'package:frontend_chat/utils/constants.dart';
 import 'package:frontend_chat/utils/global.dart';
@@ -16,6 +17,20 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
   List<ChatMessage> messages = [];
   ChatsBloc() : super(ChatsInitial()) {
     print("new message bloc start");
+    globalSocket!.on(
+      "sentMessage",
+      (data) {
+        if (data is String) {
+          data = json.decode(data);
+        }
+        final message = ChatMessage.fromJson(data);
+        messages.add(message);
+        add(Messages(messages));
+        for (var i = 0; i < messages.length; i++) {
+          print(messages[i].message);
+        }
+      },
+    );
     globalSocket!.on('newMessage', (data) {
       if (data is String) {
         data = json.decode(data);
@@ -35,6 +50,27 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
         print("new message counts $newMessageCounts");
         add(RefreshChatsList());
       }
+    });
+    globalSocket!.on("chatRequest", (data) {
+      if (data is String) {
+        data = json.decode(data..toString());
+      }
+      print(data);
+      add(ChatConnected(data['fromUserId']));
+    });
+    globalSocket!.on("declineChatRequest", (data) {
+      if (data is String) {
+        data = json.decode(data);
+      }
+      print("declineChatRequest" + data.toString());
+      add(ChatConnected(data['toUserId']));
+    });
+    globalSocket!.on("chatRequestAccepted", (data) {
+      if (data is String) {
+        data = json.decode(data);
+      }
+      print("chatRequestAccepted" + data.toString());
+      add(ChatConnected(data['toUserId']));
     });
 
     on<FetchChatsList>((event, emit) async {
@@ -72,7 +108,6 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
       (event, emit) {
         print("new message counts $newMessageCounts");
         emit(ChatsLoading());
-
         emit(ChatsListLoaded(globalchatList!, newMessageCounts));
       },
     );
@@ -83,6 +118,39 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
         emit(ChatMessages(event.messages));
       },
     );
+
+    on<SendRequest>(
+      (event, emit) {
+        globalSocket!.emit("sendChatRequest", {
+          "fromUserId": event.senderId,
+          "toUserId": event.receiverId,
+        });
+
+        emit(Status(RequestStatusModel(canAccept: false, status: "pending")));
+      },
+    );
+
+    on<AcceptRequest>(
+      (event, emit) {
+        globalSocket!.emit("acceptChatRequest", {
+          "fromUserId": event.senderId,
+          "toUserId": event.receiverId,
+        });
+
+        add(ChatConnected(event.receiverId));
+      },
+    );
+    on<RejectRequest>(
+      (event, emit) {
+        globalSocket!.emit("declineChatRequest", {
+          "fromUserId": event.senderId,
+          "toUserId": event.receiverId,
+        });
+
+        emit(Status(RequestStatusModel(canAccept: false, status: "decline")));
+      },
+    );
+
     on<ChatConnected>(
       (event, emit) async {
         print("Chat connected with id: ${event.id}");
@@ -90,6 +158,27 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
         try {
           final prefs = await SharedPreferences.getInstance();
           final id = prefs.getString('id') ?? '';
+          final accesstoken = prefs.getString('accessToken') ?? '';
+
+          // Check status
+          final statusUrl =
+              Uri.parse('${apiroute}chat/statusrequest?id=${event.id}');
+          final statusResponse = await http.get(
+            statusUrl,
+            headers: {
+              'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning',
+              'Authorization': 'Bearer $accesstoken',
+            },
+          );
+
+          print(statusResponse.body);
+          final decodresponse = ApiResponse<RequestStatusModel>.fromJson(
+              statusResponse.body, (json) => RequestStatusModel.fromJson(json));
+
+          if (decodresponse.data?.status != "accepted") {
+            emit(Status(decodresponse.data!));
+            return;
+          }
 
           final response = await fetchMessage(id, event.id);
           final chatListResponse = ApiResponse<ChatHistory>.fromJson(
@@ -111,18 +200,6 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
       (event, emit) {
         globalSocket!.emit('privateMessage',
             [event.senderId, event.receiverId, event.message]);
-        // messages.add(ChatMessage(senderId: , message: message, id: id))
-        globalSocket!.on(
-          "sentMessage",
-          (data) {
-            if (data is String) {
-              data = json.decode(data);
-            }
-            final message = ChatMessage.fromJson(data);
-            messages.add(message);
-            add(Messages(messages));
-          },
-        );
       },
     );
   }
@@ -134,11 +211,13 @@ class ChatsBloc extends Bloc<ChatsEvent, ChatsState> {
 
     final response = await http.post(
       url,
-      body: {
-        'senderId': senderId,
-        'receiverId': receiverId,
-      },
+      body: jsonEncode({
+        'ownerId': senderId,
+        'SrnderId': receiverId,
+      }),
       headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'ngrok-skip-browser-warning',
         'Authorization': 'Bearer $accesstoken',
       },
     );

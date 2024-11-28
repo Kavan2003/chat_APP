@@ -31,3 +31,30 @@ final class ChatSendMessage extends ChatsEvent {
 
   ChatSendMessage(this.senderId, this.receiverId, this.message);
 }
+
+final class CheckStatus extends ChatsEvent {
+  final String id;
+
+  CheckStatus(this.id);
+}
+
+final class SendRequest extends ChatsEvent {
+  final String senderId;
+  final String receiverId;
+
+  SendRequest(this.senderId, this.receiverId);
+}
+
+final class AcceptRequest extends ChatsEvent {
+  final String senderId;
+  final String receiverId;
+
+  AcceptRequest(this.senderId, this.receiverId);
+}
+
+final class RejectRequest extends ChatsEvent {
+  final String senderId;
+  final String receiverId;
+
+  RejectRequest(this.senderId, this.receiverId);
+}

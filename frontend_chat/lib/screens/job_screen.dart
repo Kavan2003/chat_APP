@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/jobbloc/job_bloc.dart';
 import 'package:frontend_chat/screens/jobview_screen.dart';
+import 'package:frontend_chat/theme.dart';
 import 'package:frontend_chat/utils/component/bottombar.dart';
 
 class JobScreen extends StatefulWidget {
@@ -24,7 +25,8 @@ class _JobScreenState extends State<JobScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-         bottomSheet: Container(child: BottomBar(currentIndex: 1)),
+      backgroundColor: AppTheme.backgroundColor,
+      bottomSheet: Container(child: BottomBar(currentIndex: 1)),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: FloatingActionButton.small(
         onPressed: () {
@@ -38,34 +40,52 @@ class _JobScreenState extends State<JobScreen> {
               TextEditingController companyWebsiteController =
                   TextEditingController();
               return AlertDialog(
-                title: const Text('Create Job'),
-                content: Column(
-                  children: [
-                    TextField(
-                      controller: jobDescriptionController,
-                      decoration:
-                          const InputDecoration(hintText: 'Job Description'),
-                    ),
-                    TextField(
-                      controller: skillsController,
-                      decoration:
-                          const InputDecoration(hintText: 'Skills , seprated'),
-                    ),
-                    TextField(
-                      controller: companyWebsiteController,
-                      decoration:
-                          const InputDecoration(hintText: 'Company Website'),
-                    ),
-                  ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                title: Text(
+                  'Create Job',
+                  style: AppTheme.heading2,
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: jobDescriptionController,
+                        decoration: AppTheme.inputDecoration.copyWith(
+                          hintText: 'Job Description',
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: skillsController,
+                        decoration: AppTheme.inputDecoration.copyWith(
+                          hintText: 'Skills, separated',
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: companyWebsiteController,
+                        decoration: AppTheme.inputDecoration.copyWith(
+                          hintText: 'Company Website',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
+                    style: TextButton.styleFrom(
+                      textStyle: AppTheme.buttonText,
+                      foregroundColor: AppTheme.primaryColor,
+                    ),
                     child: const Text('Cancel'),
                   ),
-                  TextButton(
+                  ElevatedButton(
                     onPressed: () {
                       // Create Job API call
                       context.read<JobBloc>().add(JobCreateEvent(
@@ -74,6 +94,7 @@ class _JobScreenState extends State<JobScreen> {
                           companyWebsiteController.text));
                       Navigator.pop(context);
                     },
+                    style: AppTheme.primaryButton,
                     child: const Text('Create'),
                   ),
                 ],
@@ -81,21 +102,28 @@ class _JobScreenState extends State<JobScreen> {
             },
           );
         },
+        backgroundColor: AppTheme.secondaryColor,
+        foregroundColor: AppTheme.onSecondaryColor,
         child: const Icon(Icons.add),
       ),
       appBar: AppBar(
         title: isSearching
             ? TextField(
                 controller: searchController,
-                decoration: const InputDecoration(
+                decoration: AppTheme.inputDecoration.copyWith(
                   hintText: 'Search...',
                   border: InputBorder.none,
+                  filled: false,
                 ),
                 onChanged: (value) {
                   // searchController.text = value;
                 },
+                style: AppTheme.bodyText,
               )
-            : Text(searchController.text),
+            : Text(
+                searchController.text,
+                style: AppTheme.heading1.copyWith(color: Colors.white),
+              ),
         actions: [
           IconButton(
             icon: Icon(isSearching ? Icons.close : Icons.search),
@@ -111,7 +139,6 @@ class _JobScreenState extends State<JobScreen> {
           ),
         ],
       ),
-   
       body: BlocBuilder<JobBloc, JobState>(
         builder: (context, state) {
           if (state is JobLoading) {
@@ -121,31 +148,38 @@ class _JobScreenState extends State<JobScreen> {
               itemCount: state.jobs.data.length,
               itemBuilder: (context, index) {
                 final job = state.jobs.data[index];
-                return ListTile(
-                  title: Text(job.owner.username),
-                  subtitle: Text(job.skills.join(', ')),
-                  onTap: () {
-                    // Navigate to JobViewScreen with job id
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => JobViewScreen(
-                          jobId: job.id,
-                          query: searchController.text,
-                        ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                  child: Container(
+                    decoration: AppTheme.cardDecoration,
+                    child: ListTile(
+                      title: Text(
+                        job.owner.username,
+                        style: AppTheme.heading2,
                       ),
-                    )
-                        // .then((_) {
-                        //   // Code to run when JobViewScreen pops out
-                        //   // For example, you can refresh the state or call a function
-                        //   setState(() {
-                        //     context
-                        //         .read<JobBloc>()
-                        //         .add(JobSearchEvent(searchController.text));
-                        //   });
-                        // })
-                        ;
-                  },
+                      subtitle: Text(
+                        job.skills.join(', '),
+                        style: AppTheme.bodyText,
+                      ),
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        color: AppTheme.onSurfaceColor,
+                      ),
+                      onTap: () {
+                        // Navigate to JobViewScreen with job id
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => JobViewScreen(
+                              jobId: job.id,
+                              query: searchController.text,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 );
               },
             );

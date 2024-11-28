@@ -22,16 +22,15 @@ class SellModel {
   });
 
   factory SellModel.fromJson(Map<String, dynamic> json) {
-    print("-------------------------------------\n");
-    print(json);
-    print("-------------------------------------\n");
     return SellModel(
       id: json['_id'] ?? '',
       owner: UserModel.fromJson(json),
       images: List<String>.from(json['images'] ?? []),
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
+      price: json['price'] is String
+          ? double.tryParse(json['price']) ?? 0.0
+          : json['price'].toDouble(),
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
     );

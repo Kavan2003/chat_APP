@@ -24,12 +24,13 @@ const generateRefreshTokenAndAccessToken = async (userid) => {
 };
 
 const getuserdetailsfromID = asyncHandler(async (req, res, next) => {
-  const { id } = req.params;
+  // const { id } = req.query;
+  const id = req.user.id;
   const user = await User.findById(id).select("-password -refreshToken");
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-  return res;
+  res.status(200).json(new ApiResponse(200, "User details retrieved", user));
 });
 
 const registerUser = asyncHandler(async (req, res, next) => {
@@ -56,7 +57,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
       "any.required": "Branch is required",
     }),
     skills: Joi.array().items(Joi.string()).required().messages({
-      "any.required": "Skills [] is required",
+      "any.required": "Skills is required",
     }),
     description: Joi.string().required().messages({
       "any.required": "description is required",
@@ -101,7 +102,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
       isAdmin,
       YearOFStudy,
       Branch,
-      skillsArray,
+      skills:  skillsArray,
       description,
       resume: resumelocalfile,
     },
@@ -141,16 +142,23 @@ const registerUser = asyncHandler(async (req, res, next) => {
         Avatar: avatarurl?.url || "",
         resume: resumeurl?.url || "",
       });
-      const createdUser = await User.findById(newUser._id).select(
+      const Owner = await User.findById(newUser._id).select(
         "-password -refreshToken"
       );
-      if (!createdUser) {
+      if (!Owner) {
         throw new ApiError(400, "Error in creating user");
       }
+      const { refreshToken, accessToken } =
+    await generateRefreshTokenAndAccessToken(newUser._id);
+
       return res
         .status(201)
         .json(
-          new ApiResponse(201, "User registered successfully", createdUser)
+          new ApiResponse(201, "User registered successfully", {
+            Owner,
+            accessToken,
+            refreshToken,
+          })
         );
     }
   }
@@ -225,4 +233,65 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, getuserdetailsfromID };
+const changePassword = asyncHandler(async (req, res, next) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isMatch = await user.comparePassword(oldPassword);
+  if (!isMatch) {
+    throw new ApiError(401, "Old password is incorrect");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, "Password changed successfully"));
+});
+
+const updateProfile = asyncHandler(async (req, res, next) => {
+  const { username, email, YearOFStudy, Branch, skills, description } = req.body;
+  const userId = req.user.id;
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.username = username || user.username;
+  user.email = email || user.email;
+  user.YearOFStudy = YearOFStudy || user.YearOFStudy;
+  user.Branch = Branch || user.Branch;
+  user.skills = skills ? skills.split(",") : user.skills;
+  user.description = description || user.description;
+
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, "Profile updated successfully", user));
+});
+
+const addAvatar = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  if (!req.file) {
+    throw new ApiError(400, "No file uploaded");
+  }
+
+  const avatarUrl = await uploadFileOnCloudinary(req.file.path);
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  user.Avatar = avatarUrl.url;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, "Avatar added successfully", user));
+});
+
+export { registerUser, loginUser, getuserdetailsfromID, changePassword, updateProfile, addAvatar };

@@ -30,6 +30,24 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    if (json['Owner'] == null) {
+      return UserModel(
+        accessToken: json['accessToken'] ?? '',
+        id: json['_id'] ?? '',
+        username: json['username'] ?? '',
+        email: json['email'] ?? '',
+        isAdmin: false,
+        //todo: change this to json['loggedUser']['isAdmin'] ?? false,
+        yearOfStudy: (json['YearOFStudy'] ?? 0).toString(),
+        branch: json['Branch'] ?? '',
+        skills: List<String>.from(json['skills'] ?? []),
+        avatar: json['Avatar'] ?? '',
+        description: json['description'] ?? '',
+        resume: json['resume'] ?? '',
+        createdAt: json['createdAt'] ?? '',
+        updatedAt: json['updatedAt'] ?? '',
+      );
+    }
     return UserModel(
       accessToken: json['accessToken'] ?? '',
       id: json['Owner']['_id'] ?? '',

@@ -1,7 +1,6 @@
-const String basedomain = "bca3-119-160-199-91.ngrok-free.app";
-const String websocket = "wss://$basedomain";
-const String apiroute = "https://$basedomain/api/";
-
+const String basedomain = "192.168.252.234:8000";
+const String websocket = "ws://$basedomain";
+const String apiroute = "http://$basedomain/api/";
 const String userRoute = "user/";
 const String loginRoute = "login";
 const String registerRoute = "register";

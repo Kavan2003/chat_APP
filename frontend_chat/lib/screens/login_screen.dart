@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend_chat/bloc/authBloc/auth_bloc.dart';
 import 'package:frontend_chat/screens/chatList_screen.dart';
+import 'package:frontend_chat/screens/register_screen.dart';
 import 'package:frontend_chat/utils/constants.dart';
+import 'package:frontend_chat/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,229 +17,232 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final usernameController = TextEditingController();
-  final temp = TextEditingController();
 
   bool isUsernameLogin = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Login to Chat'),
-        backgroundColor: Colors.deepPurple[400],
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthSuccessState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  duration: Duration(seconds: 2),
-                  dismissDirection: DismissDirection.horizontal,
-                  content: Text('Welcome ${state.user.username}!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+      backgroundColor: AppTheme.backgroundColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: BlocConsumer<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthSuccessState) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    duration: const Duration(seconds: 2),
+                    content: Text('Welcome ${state.user.username}!'),
+                    backgroundColor: AppTheme.secondaryColor,
+                  ),
+                );
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatListScreen(),
-                ),
-              );
-            } else if (state is AuthFailedState) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Login Failed'),
-                      content: SingleChildScrollView(
-                        child: ListBody(
-                          children: <Widget>[
-                            Center(
-                              child: CircleAvatar(
-                                backgroundColor: Colors.red,
-                                child: IconButton(
-                                  icon: const Icon(Icons.close,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(state.message, textAlign: TextAlign.center),
-                          ],
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatListScreen(),
+                  ),
+                );
+              } else if (state is AuthFailedState) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
+                        title: const Text('Login Failed'),
+                        content: SingleChildScrollView(
+                          child: ListBody(
+                            children: <Widget>[
+                              Icon(
+                                Icons.error_outline,
+                                color: AppTheme.errorColor,
+                                size: 60,
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                state.message,
+                                textAlign: TextAlign.center,
+                                style: AppTheme.bodyText,
+                              ),
+                            ],
+                          ),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('OK'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: AppTheme.secondaryButton,
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                });
+              }
+            },
+            builder: (context, state) {
+              if (state is AuthLoadingState) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 40),
+                    Text(
+                      'Welcome Back',
+                      style: AppTheme.heading1,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Please sign in to continue',
+                      style: AppTheme.bodyText.copyWith(
+                        color: AppTheme.onBackgroundColor.withOpacity(0.6),
                       ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('OK'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    ToggleButtons(
+                      borderColor: Colors.grey[300],
+                      fillColor: AppTheme.primaryColor,
+                      borderWidth: 2,
+                      selectedBorderColor: AppTheme.primaryColor,
+                      selectedColor: AppTheme.onPrimaryColor,
+                      color: AppTheme.onBackgroundColor.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: (int index) {
+                        setState(() {
+                          isUsernameLogin = index == 0;
+                        });
+                      },
+                      isSelected: [isUsernameLogin, !isUsernameLogin],
+                      children: const <Widget>[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 32),
+                          child: Text('Username'),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 32),
+                          child: Text('Email'),
                         ),
                       ],
-                    );
-                  },
-                );
-              });
-            }
-          },
-          builder: (context, state) {
-            if (state is AuthLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  ToggleButtons(
-                    borderColor: Colors.grey,
-                    fillColor: Colors.deepPurple[400],
-                    borderWidth: 2,
-                    selectedBorderColor: Colors.deepPurple[400],
-                    selectedColor: Colors.white,
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(0),
-                    onPressed: (int index) {
-                      setState(() {
-                        isUsernameLogin = index == 0;
-                      });
-                    },
-                    isSelected: [isUsernameLogin, !isUsernameLogin],
-                    children: const <Widget>[
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32),
-                        child: Text('Username'),
+                    ),
+                    const SizedBox(height: 30),
+                    if (isUsernameLogin)
+                      TextField(
+                        controller: usernameController,
+                        decoration: AppTheme.inputDecoration.copyWith(
+                          labelText: 'Username',
+                          prefixIcon: const Icon(Icons.person),
+                        ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32),
-                        child: Text('Email'),
+                    if (!isUsernameLogin)
+                      TextField(
+                        controller: emailController,
+                        decoration: AppTheme.inputDecoration.copyWith(
+                          labelText: 'Email',
+                          prefixIcon: const Icon(Icons.email),
+                        ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (isUsernameLogin)
+                    const SizedBox(height: 20),
                     TextField(
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: AppTheme.inputDecoration.copyWith(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock),
                       ),
                     ),
-                  if (!isUsernameLogin)
-                    TextField(
-                      controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                    ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock),
-                    ),
-                  ),
-                  // TextField(
-                  //   controller: temp,
-                  //   obscureText: false,
-                  //   decoration: const InputDecoration(
-                  //     labelText: 'url',
-                  //     border: OutlineInputBorder(),
-                  //     // prefixIcon: Icon(Icons),
-                  //   ),
-                  // ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      //  basedomain = temp.text;
-
-                      if (isUsernameLogin
-                          ? usernameController.text.isNotEmpty &&
-                              passwordController.text.isNotEmpty
-                          : emailController.text.isNotEmpty &&
-                              passwordController.text.isNotEmpty) {
-                        context.read<AuthBloc>().add(
-                              isUsernameLogin
-                                  ? AuthLoginEvent(
-                                      username: usernameController.text,
-                                      password: passwordController.text)
-                                  : AuthLoginEvent(
-                                      email: emailController.text,
-                                      password: passwordController.text),
-                            );
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Login Failed'),
-                              content: SingleChildScrollView(
-                                child: ListBody(
-                                  children: <Widget>[
-                                    Center(
-                                      child: CircleAvatar(
-                                        backgroundColor: Colors.red,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.close,
-                                              color: Colors.white),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (isUsernameLogin
+                            ? usernameController.text.isNotEmpty &&
+                                passwordController.text.isNotEmpty
+                            : emailController.text.isNotEmpty &&
+                                passwordController.text.isNotEmpty) {
+                          context.read<AuthBloc>().add(
+                                isUsernameLogin
+                                    ? AuthLoginEvent(
+                                        username: usernameController.text,
+                                        password: passwordController.text)
+                                    : AuthLoginEvent(
+                                        email: emailController.text,
+                                        password: passwordController.text),
+                              );
+                        } else {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Text('Login Failed'),
+                                content: SingleChildScrollView(
+                                  child: ListBody(
+                                    children: <Widget>[
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: AppTheme.errorColor,
+                                        size: 60,
                                       ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text('Please fill all the fields',
-                                        textAlign: TextAlign.center),
-                                  ],
+                                      const SizedBox(height: 20),
+                                      const Text(
+                                        'Please fill all the fields',
+                                        textAlign: TextAlign.center,
+                                        style: AppTheme.bodyText,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      backgroundColor: Colors.deepPurple[400],
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('OK'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    style: AppTheme.secondaryButton,
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      },
+                      style: AppTheme.primaryButton,
+                      child: const Text(
+                        'Login',
+                        style: AppTheme.buttonText,
+                      ),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w200,
-                          color: Colors.white),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const RegisterScreen()));
+                      },
+                      child: Text(
+                        'Don\'t have an account? Register',
+                        style: AppTheme.bodyText.copyWith(
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

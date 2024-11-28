@@ -19,6 +19,7 @@ class ApiResponse<T> {
     }
 
     final jsonData = json.decode(str);
+
     return ApiResponse(
       status: jsonData['status'].toString(),
       message: jsonData['message'] is List
