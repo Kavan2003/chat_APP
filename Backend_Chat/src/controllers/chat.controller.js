@@ -1,11 +1,11 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
-import { ChatRequests } from "../models/chatRequest.models.js";
+import { ChatRequests } from "../models/chatModels/chatRequest.models.js";
 import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import Fuse from "fuse.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { SearchHistory } from "../models/searchHistory.models.js";
-import { Chat } from "../models/chat.models.js";
+import { Chat } from "../models/chatModels/chat.models.js";
 import mongoose from "mongoose";
 
 const listChat = asyncHandler(async (req, res, next) => {

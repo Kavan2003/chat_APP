@@ -1,8 +1,3 @@
-import { Chat } from "./models/chat.models.js";
-import { ChatRequests } from "./models/chatRequest.models.js";
-import { GroupMembers } from "./models/groupMembers.models.js";
-import mongoose from 'mongoose';
-
 
 // socket Handler.js
 export const socketHandler = (io) => {

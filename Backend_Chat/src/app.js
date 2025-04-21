@@ -22,9 +22,16 @@ app.use('/api/user',userRoute);
 import chatRoute from '../src/routes/chat.routes.js';
 import sellRoute from './routes/sell.routes.js';
 import jobRoute from './routes/job.routes.js';
+import courseRoute from './routes/course.routes.js';
+
+app.use('/',(req,res,next)=>{
+    res.send("Server is running")
+}
+);
 app.use('/api/chat',chatRoute);
 app.use('/api/sell',sellRoute);
 app.use('/api/job',jobRoute);
+app.use('/api/course',courseRoute);
 
 
 
